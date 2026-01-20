@@ -30,9 +30,9 @@ if (process.env.NODE_ENV !== 'test') {
   });
 }
 
-// Routes will be added here
+// Routes
 // app.use('/api/auth', require('./routes/auth'));
-// app.use('/api/goals', require('./routes/goals'));
+app.use('/api/goals', require('./routes/goals'));
 // app.use('/api/habits', require('./routes/habits'));
 
 // Error handling middleware

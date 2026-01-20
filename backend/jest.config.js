@@ -7,4 +7,5 @@ module.exports = {
   ],
   coverageDirectory: 'coverage',
   verbose: true,
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
 };
