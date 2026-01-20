@@ -1,4 +1,4 @@
-const { calculateStreak } = require('./habitUtils');
+const { calculateStreak, calculateWeeklyCompletion } = require('./habitUtils');
 
 describe('habitUtils - calculateStreak', () => {
   let today;
@@ -97,5 +97,62 @@ describe('habitUtils - calculateStreak', () => {
       { date: yesterday, is_completed: true },
     ];
     expect(calculateStreak(logs)).toBe(2);
+  });
+});
+
+describe('habitUtils - calculateWeeklyCompletion', () => {
+  let today;
+  let dates;
+
+  beforeAll(() => {
+    today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    dates = [];
+    for (let i = 0; i < 10; i++) {
+      const d = new Date(today);
+      d.setDate(d.getDate() - i);
+      dates.push(d);
+    }
+  });
+
+  it('should return 0 for empty logs', () => {
+    expect(calculateWeeklyCompletion([])).toBe(0);
+  });
+
+  it('should return 14 for 1 completion in last 7 days (1/7 * 100 = 14.28)', () => {
+    const logs = [{ date: today, is_completed: true }];
+    expect(calculateWeeklyCompletion(logs)).toBe(14);
+  });
+
+  it('should return 100 for 7 completions in last 7 days', () => {
+    const logs = dates.slice(0, 7).map(date => ({ date, is_completed: true }));
+    expect(calculateWeeklyCompletion(logs)).toBe(100);
+  });
+
+  it('should ignore logs older than 7 days', () => {
+    const logs = [
+      { date: today, is_completed: true },
+      { date: dates[7], is_completed: true }, // 8 days ago
+      { date: dates[8], is_completed: true }, // 9 days ago
+    ];
+    expect(calculateWeeklyCompletion(logs)).toBe(14);
+  });
+
+  it('should handle multiple logs on same day', () => {
+    const logs = [
+      { date: today, is_completed: true },
+      { date: today, is_completed: true },
+    ];
+    expect(calculateWeeklyCompletion(logs)).toBe(14);
+  });
+
+  it('should return 43 for 3 completions in last 7 days (3/7 * 100 = 42.85)', () => {
+    const logs = [
+      { date: today, is_completed: true },
+      { date: dates[2], is_completed: true },
+      { date: dates[5], is_completed: true },
+    ];
+    expect(calculateWeeklyCompletion(logs)).toBe(43);
   });
 });

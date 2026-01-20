@@ -541,5 +541,26 @@ describe('Habits API', () => {
       expect(response.body.data.current_streak).toBe(0);
       expect(response.body.data.best_streak).toBe(5); // Best streak preserved
     });
+
+    it('should calculate and return weekly completion rate when logging', async () => {
+      const habit = await Habit.create({
+        user_id: testUserId,
+        title: 'Weekly Rate Habit',
+      });
+
+      const todayStr = new Date().toISOString().split('T')[0];
+
+      const response = await request(app)
+        .post(`/api/habits/${habit._id}/log`)
+        .send({ user_id: testUserId.toString(), date: todayStr })
+        .expect(201);
+
+      // 1 completion in 7 days = 14%
+      expect(response.body.data.weekly_completion_rate).toBe(14);
+
+      // Verify habit in DB
+      const updatedHabit = await Habit.findById(habit._id);
+      expect(updatedHabit.weekly_completion_rate).toBe(14);
+    });
   });
 });

@@ -55,6 +55,42 @@ function calculateStreak(habitLogs) {
   return streak;
 }
 
+/**
+ * Calculates the weekly completion rate for a habit based on its logs.
+ * 
+ * @param {Array} habitLogs - Array of habit log objects { date: Date, is_completed: boolean }
+ * @returns {number} The weekly completion rate percentage (0-100)
+ */
+function calculateWeeklyCompletion(habitLogs) {
+  if (!habitLogs || habitLogs.length === 0) {
+    return 0;
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const sevenDaysAgo = new Date(today);
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6); // Last 7 days including today
+
+  const recentLogs = habitLogs.filter(log => {
+    if (!log.is_completed) return false;
+    const logDate = new Date(log.date);
+    logDate.setHours(0, 0, 0, 0);
+    return logDate >= sevenDaysAgo && logDate <= today;
+  });
+
+  // Unique dates to avoid double counting if multiple logs exist for the same day
+  const uniqueDates = new Set(recentLogs.map(log => {
+    const d = new Date(log.date);
+    d.setHours(0, 0, 0, 0);
+    return d.getTime();
+  }));
+
+  const completionRate = (uniqueDates.size / 7) * 100;
+  return Math.round(completionRate);
+}
+
 module.exports = {
   calculateStreak,
+  calculateWeeklyCompletion,
 };
