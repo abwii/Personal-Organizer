@@ -1,5 +1,6 @@
 const Habit = require('../models/Habit');
 const HabitLog = require('../models/HabitLog');
+const { calculateStreak } = require('../utils/habitUtils');
 
 // GET /api/habits - Get all habits with optional filtering
 const getHabits = async (req, res) => {
@@ -20,10 +21,26 @@ const getHabits = async (req, res) => {
     }
 
     const habits = await Habit.find(filter).sort({ createdAt: -1 });
+
+    // Recalculate streaks for each habit to ensure they are up to date
+    // (e.g., if a user hasn't logged today and the streak should be 0)
+    const habitsWithUpdatedStreaks = await Promise.all(
+      habits.map(async (habit) => {
+        const logs = await HabitLog.find({ habit_id: habit._id });
+        const currentStreak = calculateStreak(logs);
+        
+        if (habit.current_streak !== currentStreak) {
+          habit.current_streak = currentStreak;
+          await habit.save();
+        }
+        return habit;
+      })
+    );
+
     res.status(200).json({
       success: true,
-      count: habits.length,
-      data: habits,
+      count: habitsWithUpdatedStreaks.length,
+      data: habitsWithUpdatedStreaks,
     });
   } catch (error) {
     console.error('Error fetching habits:', error);
@@ -47,6 +64,15 @@ const getHabitById = async (req, res) => {
         success: false,
         error: 'Habit not found',
       });
+    }
+
+    // Recalculate streak to ensure it's up to date
+    const logs = await HabitLog.find({ habit_id: habit._id });
+    const currentStreak = calculateStreak(logs);
+    
+    if (habit.current_streak !== currentStreak) {
+      habit.current_streak = currentStreak;
+      await habit.save();
     }
 
     res.status(200).json({
@@ -311,9 +337,24 @@ const logHabit = async (req, res) => {
 
     await habitLog.save();
 
+    // Recalculate streak
+    const allLogs = await HabitLog.find({ habit_id: id });
+    const newStreak = calculateStreak(allLogs);
+
+    // Update habit with new streak
+    habit.current_streak = newStreak;
+    if (newStreak > habit.best_streak) {
+      habit.best_streak = newStreak;
+    }
+    await habit.save();
+
     res.status(201).json({
       success: true,
-      data: habitLog,
+      data: {
+        ...habitLog.toObject(),
+        current_streak: habit.current_streak,
+        best_streak: habit.best_streak,
+      },
     });
   } catch (error) {
     console.error('Error logging habit:', error);
