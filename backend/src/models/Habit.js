@@ -35,6 +35,14 @@ const habitSchema = new mongoose.Schema({
     default: 'active',
     required: true,
   },
+  current_streak: {
+    type: Number,
+    default: 0,
+  },
+  best_streak: {
+    type: Number,
+    default: 0,
+  },
 }, {
   timestamps: true,
 });

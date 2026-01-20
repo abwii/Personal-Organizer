@@ -6,7 +6,6 @@ const HabitLog = require('../models/HabitLog');
 
 describe('Habits API', () => {
   let testUserId;
-  let testHabitId;
 
   beforeAll(async () => {
     // Create a test user ID
@@ -45,7 +44,7 @@ describe('Habits API', () => {
       expect(response.body.success).toBe(true);
       expect(response.body.data.title).toBe(habitData.title);
       expect(response.body.data.frequency).toBe(habitData.frequency);
-      testHabitId = response.body.data._id;
+      expect(response.body.data.frequency).toBe(habitData.frequency);
     });
 
     it('should require title', async () => {
@@ -112,12 +111,13 @@ describe('Habits API', () => {
   describe('GET /api/habits', () => {
     it('should get all habits for a user', async () => {
       // Create test habits
-      const habit1 = await Habit.create({
+      // Create test habits
+      await Habit.create({
         user_id: testUserId,
         title: 'Habit 1',
         frequency: 'daily',
       });
-      const habit2 = await Habit.create({
+      await Habit.create({
         user_id: testUserId,
         title: 'Habit 2',
         frequency: 'weekly',
@@ -480,6 +480,66 @@ describe('Habits API', () => {
       expect(logDate.getUTCMinutes()).toBe(0);
       expect(logDate.getUTCSeconds()).toBe(0);
       expect(logDate.getUTCMilliseconds()).toBe(0);
+    });
+  });
+
+  describe('Habit Streaks Integration', () => {
+    it('should calculate and return streaks when logging', async () => {
+      const habit = await Habit.create({
+        user_id: testUserId,
+        title: 'Streak Habit',
+      });
+
+      const todayStr = new Date().toISOString().split('T')[0];
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+      // Log yesterday
+      await request(app)
+        .post(`/api/habits/${habit._id}/log`)
+        .send({ user_id: testUserId.toString(), date: yesterdayStr })
+        .expect(201);
+
+      // Log today
+      const response = await request(app)
+        .post(`/api/habits/${habit._id}/log`)
+        .send({ user_id: testUserId.toString(), date: todayStr })
+        .expect(201);
+
+      expect(response.body.data.current_streak).toBe(2);
+      expect(response.body.data.best_streak).toBe(2);
+
+      // Verify habit in DB
+      const updatedHabit = await Habit.findById(habit._id);
+      expect(updatedHabit.current_streak).toBe(2);
+      expect(updatedHabit.best_streak).toBe(2);
+    });
+
+    it('should reset streak if a day is missed when fetching', async () => {
+      const habit = await Habit.create({
+        user_id: testUserId,
+        title: 'Missed Habit',
+        current_streak: 5, // Manually set a streak
+        best_streak: 5,
+      });
+
+      // Log 2 days ago
+      const twoDaysAgo = new Date();
+      twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+      await HabitLog.create({
+        habit_id: habit._id,
+        date: twoDaysAgo,
+        is_completed: true,
+      });
+
+      // Fetch habit - streak should be recalculated to 0 because yesterday was missed
+      const response = await request(app)
+        .get(`/api/habits/${habit._id}?user_id=${testUserId.toString()}`)
+        .expect(200);
+
+      expect(response.body.data.current_streak).toBe(0);
+      expect(response.body.data.best_streak).toBe(5); // Best streak preserved
     });
   });
 });
