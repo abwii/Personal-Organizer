@@ -1,6 +1,6 @@
 const Habit = require('../models/Habit');
 const HabitLog = require('../models/HabitLog');
-const { calculateStreak } = require('../utils/habitUtils');
+const { calculateStreak, calculateWeeklyCompletion } = require('../utils/habitUtils');
 
 // GET /api/habits - Get all habits with optional filtering
 const getHabits = async (req, res) => {
@@ -28,9 +28,11 @@ const getHabits = async (req, res) => {
       habits.map(async (habit) => {
         const logs = await HabitLog.find({ habit_id: habit._id });
         const currentStreak = calculateStreak(logs);
+        const weeklyCompletion = calculateWeeklyCompletion(logs);
         
-        if (habit.current_streak !== currentStreak) {
+        if (habit.current_streak !== currentStreak || habit.weekly_completion_rate !== weeklyCompletion) {
           habit.current_streak = currentStreak;
+          habit.weekly_completion_rate = weeklyCompletion;
           await habit.save();
         }
         return habit;
@@ -69,9 +71,11 @@ const getHabitById = async (req, res) => {
     // Recalculate streak to ensure it's up to date
     const logs = await HabitLog.find({ habit_id: habit._id });
     const currentStreak = calculateStreak(logs);
+    const weeklyCompletion = calculateWeeklyCompletion(logs);
     
-    if (habit.current_streak !== currentStreak) {
+    if (habit.current_streak !== currentStreak || habit.weekly_completion_rate !== weeklyCompletion) {
       habit.current_streak = currentStreak;
+      habit.weekly_completion_rate = weeklyCompletion;
       await habit.save();
     }
 
@@ -337,12 +341,14 @@ const logHabit = async (req, res) => {
 
     await habitLog.save();
 
-    // Recalculate streak
+    // Recalculate streak and weekly completion
     const allLogs = await HabitLog.find({ habit_id: id });
     const newStreak = calculateStreak(allLogs);
+    const weeklyCompletion = calculateWeeklyCompletion(allLogs);
 
-    // Update habit with new streak
+    // Update habit with new streak and weekly completion
     habit.current_streak = newStreak;
+    habit.weekly_completion_rate = weeklyCompletion;
     if (newStreak > habit.best_streak) {
       habit.best_streak = newStreak;
     }
@@ -354,6 +360,7 @@ const logHabit = async (req, res) => {
         ...habitLog.toObject(),
         current_streak: habit.current_streak,
         best_streak: habit.best_streak,
+        weekly_completion_rate: habit.weekly_completion_rate,
       },
     });
   } catch (error) {

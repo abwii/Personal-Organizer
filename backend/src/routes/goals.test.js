@@ -252,4 +252,53 @@ describe('Goals API', () => {
       expect(response.body.error).toBe('Goal not found');
     });
   });
+
+  describe('Goal Progress Integration', () => {
+    it('should calculate progress when creating a goal with steps', async () => {
+      const goalData = {
+        user_id: testUserId.toString(),
+        title: 'Goal with Steps',
+        startDate: '2024-01-01',
+        dueDate: '2024-12-31',
+        steps: [
+          { title: 'Step 1', is_completed: true },
+          { title: 'Step 2', is_completed: false },
+        ],
+      };
+
+      const response = await request(app)
+        .post('/api/goals')
+        .send(goalData)
+        .expect(201);
+
+      expect(response.body.data.progress).toBe(50);
+      expect(response.body.data.steps).toHaveLength(2);
+    });
+
+    it('should update progress when updating steps', async () => {
+      const goal = await Goal.create({
+        user_id: testUserId,
+        title: 'Update Progress Goal',
+        startDate: new Date('2024-01-01'),
+        dueDate: new Date('2024-12-31'),
+        steps: [
+          { title: 'Step 1', is_completed: false },
+        ],
+      });
+
+      const response = await request(app)
+        .put(`/api/goals/${goal._id}`)
+        .send({
+          user_id: testUserId.toString(),
+          steps: [
+            { title: 'Step 1', is_completed: true },
+            { title: 'Step 2', is_completed: true },
+          ],
+        })
+        .expect(200);
+
+      expect(response.body.data.progress).toBe(100);
+      expect(response.body.data.steps).toHaveLength(2);
+    });
+  });
 });
