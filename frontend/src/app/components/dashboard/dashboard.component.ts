@@ -48,30 +48,51 @@ export class DashboardComponent implements OnInit {
     const today = new Date().toISOString().split('T')[0];
 
     if (habit.is_completed_today) {
-      // Already completed, do nothing (or could implement un-logging if needed)
-      return;
+      // Uncheck: remove the log for today
+      this.habitsService.unlogHabit(habit._id, userId, today).subscribe({
+        next: (response) => {
+          // Update local state
+          habit.is_completed_today = false;
+          if (response.data.current_streak !== undefined) {
+            habit.current_streak = response.data.current_streak;
+          }
+          if (response.data.best_streak !== undefined) {
+            habit.best_streak = response.data.best_streak;
+          }
+          if (response.data.weekly_completion_rate !== undefined) {
+            habit.weekly_completion_rate = response.data.weekly_completion_rate;
+          }
+          // Reload dashboard to get updated data
+          this.loadDashboard();
+        },
+        error: (err) => {
+          this.error = err.error?.error || 'Failed to unlog habit';
+          console.error('Error unlogging habit:', err);
+        }
+      });
+    } else {
+      // Check: log the habit for today
+      this.habitsService.logHabit(habit._id, userId, today).subscribe({
+        next: (response) => {
+          // Update local state
+          habit.is_completed_today = true;
+          if (response.data.current_streak !== undefined) {
+            habit.current_streak = response.data.current_streak;
+          }
+          if (response.data.best_streak !== undefined) {
+            habit.best_streak = response.data.best_streak;
+          }
+          if (response.data.weekly_completion_rate !== undefined) {
+            habit.weekly_completion_rate = response.data.weekly_completion_rate;
+          }
+          // Reload dashboard to get updated best_streak
+          this.loadDashboard();
+        },
+        error: (err) => {
+          this.error = err.error?.error || 'Failed to log habit completion';
+          console.error('Error logging habit:', err);
+        }
+      });
     }
-
-    this.habitsService.logHabit(habit._id, userId, today).subscribe({
-      next: (response) => {
-        // Update local state
-        habit.is_completed_today = true;
-        if (response.data.current_streak !== undefined) {
-          habit.current_streak = response.data.current_streak;
-        }
-        if (response.data.best_streak !== undefined) {
-          habit.best_streak = response.data.best_streak;
-        }
-        if (response.data.weekly_completion_rate !== undefined) {
-          habit.weekly_completion_rate = response.data.weekly_completion_rate;
-        }
-        // Reload dashboard to get updated best_streak
-        this.loadDashboard();
-      },
-      error: (err) => {
-        this.error = err.error?.error || 'Failed to log habit completion';
-        console.error('Error logging habit:', err);
-      }
-    });
   }
 }

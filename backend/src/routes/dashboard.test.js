@@ -223,16 +223,18 @@ describe('Dashboard API', () => {
       // Create logs to support the streak of 3
       const today = new Date();
       today.setUTCHours(0, 0, 0, 0);
+      today.setUTCMilliseconds(0);
       const yesterday = new Date(today);
       yesterday.setUTCDate(yesterday.getUTCDate() - 1);
+      yesterday.setUTCMilliseconds(0);
       const twoDaysAgo = new Date(today);
       twoDaysAgo.setUTCDate(twoDaysAgo.getUTCDate() - 2);
+      twoDaysAgo.setUTCMilliseconds(0);
 
-      await HabitLog.create([
-        { habit_id: habit._id, date: today, is_completed: true },
-        { habit_id: habit._id, date: yesterday, is_completed: true },
-        { habit_id: habit._id, date: twoDaysAgo, is_completed: true },
-      ]);
+      // Create logs for 3 consecutive days (current streak will be 3)
+      await HabitLog.create({ habit_id: habit._id, date: twoDaysAgo, is_completed: true });
+      await HabitLog.create({ habit_id: habit._id, date: yesterday, is_completed: true });
+      await HabitLog.create({ habit_id: habit._id, date: today, is_completed: true });
 
       const response = await request(app)
         .get('/api/dashboard')
@@ -246,7 +248,16 @@ describe('Dashboard API', () => {
       expect(habitData.category).toBe('Health');
       expect(habitData.current_streak).toBe(3);
       expect(habitData.best_streak).toBe(3);
-      expect(habitData.weekly_completion_rate).toBe(43);
+      expect(habitData.weekly_completion_rate).toBe(43); // 3 out of 7 days
+    });
+
+    it('should require user_id', async () => {
+      const response = await request(app)
+        .get('/api/dashboard')
+        .expect(400);
+
+      expect(response.body.success).toBe(false);
+      expect(response.body.error).toContain('user_id');
     });
 
     it('should update streaks when fetching dashboard', async () => {

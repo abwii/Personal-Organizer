@@ -46,8 +46,7 @@
             <button 
               class="check-button"
               [class.checked]="habit.is_completed_today"
-              (click)="toggleHabitCompletion(habit)"
-              [disabled]="habit.is_completed_today">
+              (click)="toggleHabitCompletion(habit)">
               {{ habit.is_completed_today ? '✓' : '○' }}
             </button>
           </div>
