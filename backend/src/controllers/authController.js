@@ -88,4 +88,10 @@ module.exports = {
       });
     }
   },
+
+  // POST /logout
+  logout: async (req, res) => {
+    // Avec JWT, le client doit supprimer le token de son côté.
+    res.send({ message: "Déconnexion réussie" });
+  },
 };

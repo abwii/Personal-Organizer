@@ -7,6 +7,7 @@ const authMiddleware = require("../middlewares/jwt");
 // Routes d'authentification
 router.post("/register", authController.register);
 router.post("/login", authController.login);
+router.post("/logout", authController.logout);
 
 // Routes utilisateur (protégées)
 router.get("/me", authMiddleware.verifyUser, usersController.getUserInfos);
