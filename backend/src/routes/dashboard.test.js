@@ -151,6 +151,7 @@ describe('Dashboard API', () => {
       // Create a log for today
       const today = new Date();
       today.setUTCHours(0, 0, 0, 0);
+      today.setUTCMilliseconds(0);
       await HabitLog.create({
         habit_id: habit._id,
         date: today,
@@ -199,10 +200,30 @@ describe('Dashboard API', () => {
         category: 'Health',
         frequency: 'daily',
         status: 'active',
-        current_streak: 3,
-        best_streak: 5,
-        weekly_completion_rate: 71,
       });
+
+      // Create logs to match expected streak values
+      // For current_streak: 5, we need 5 consecutive days ending today
+      // For best_streak: 5, the current streak will also be 5
+      // For weekly_completion_rate: 71, we need 5 out of 7 days
+      const today = new Date();
+      today.setUTCHours(0, 0, 0, 0);
+      today.setUTCMilliseconds(0);
+      const yesterday = new Date(today);
+      yesterday.setUTCDate(yesterday.getUTCDate() - 1);
+      const twoDaysAgo = new Date(today);
+      twoDaysAgo.setUTCDate(twoDaysAgo.getUTCDate() - 2);
+      const threeDaysAgo = new Date(today);
+      threeDaysAgo.setUTCDate(threeDaysAgo.getUTCDate() - 3);
+      const fourDaysAgo = new Date(today);
+      fourDaysAgo.setUTCDate(fourDaysAgo.getUTCDate() - 4);
+      
+      // Create logs for 5 consecutive days (current streak will be 5)
+      await HabitLog.create({ habit_id: habit._id, date: fourDaysAgo, is_completed: true });
+      await HabitLog.create({ habit_id: habit._id, date: threeDaysAgo, is_completed: true });
+      await HabitLog.create({ habit_id: habit._id, date: twoDaysAgo, is_completed: true });
+      await HabitLog.create({ habit_id: habit._id, date: yesterday, is_completed: true });
+      await HabitLog.create({ habit_id: habit._id, date: today, is_completed: true });
 
       const response = await request(app)
         .get(`/api/dashboard?user_id=${testUserId.toString()}`)
@@ -213,7 +234,7 @@ describe('Dashboard API', () => {
       expect(habitData.title).toBe('Test Habit');
       expect(habitData.description).toBe('Test Description');
       expect(habitData.category).toBe('Health');
-      expect(habitData.current_streak).toBe(3);
+      expect(habitData.current_streak).toBe(5);
       expect(habitData.best_streak).toBe(5);
       expect(habitData.weekly_completion_rate).toBe(71);
     });

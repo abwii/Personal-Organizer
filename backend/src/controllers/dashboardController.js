@@ -1,7 +1,7 @@
 const Goal = require('../models/Goal');
 const Habit = require('../models/Habit');
 const HabitLog = require('../models/HabitLog');
-const { calculateStreak } = require('../utils/habitUtils');
+const { calculateStreak, calculateWeeklyCompletion } = require('../utils/habitUtils');
 
 // GET /api/dashboard - Get dashboard aggregated data
 const getDashboard = async (req, res) => {
@@ -33,10 +33,12 @@ const getDashboard = async (req, res) => {
       activeHabits.map(async (habit) => {
         const logs = await HabitLog.find({ habit_id: habit._id });
         const currentStreak = calculateStreak(logs);
+        const weeklyCompletion = calculateWeeklyCompletion(logs);
         
-        // Update habit streak if needed
-        if (habit.current_streak !== currentStreak) {
+        // Update habit streak and weekly completion if needed
+        if (habit.current_streak !== currentStreak || habit.weekly_completion_rate !== weeklyCompletion) {
           habit.current_streak = currentStreak;
+          habit.weekly_completion_rate = weeklyCompletion;
           if (currentStreak > habit.best_streak) {
             habit.best_streak = currentStreak;
           }
@@ -51,9 +53,10 @@ const getDashboard = async (req, res) => {
       })
     );
 
-    // Get today's date at midnight UTC
+    // Get today's date at midnight UTC (normalize to ensure no milliseconds)
     const today = new Date();
     today.setUTCHours(0, 0, 0, 0);
+    today.setUTCMilliseconds(0);
     const tomorrow = new Date(today);
     tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
 
@@ -62,23 +65,27 @@ const getDashboard = async (req, res) => {
       habitsWithStreaks
         .filter((habit) => habit.frequency === 'daily')
         .map(async (habit) => {
-          // Check if habit was already logged today
+          // Check if habit was already completed today (must have a log with is_completed: true)
           const todayLog = await HabitLog.findOne({
             habit_id: habit._id,
             date: {
               $gte: today,
               $lt: tomorrow,
             },
+            is_completed: true,
           });
 
+          // Reload habit to get updated values after streak calculation
+          const updatedHabit = await Habit.findById(habit._id);
+
           return {
-            _id: habit._id,
-            title: habit.title,
-            description: habit.description,
-            category: habit.category,
-            current_streak: habit.current_streak,
-            best_streak: habit.best_streak,
-            weekly_completion_rate: habit.weekly_completion_rate,
+            _id: updatedHabit._id,
+            title: updatedHabit.title,
+            description: updatedHabit.description,
+            category: updatedHabit.category,
+            current_streak: updatedHabit.current_streak,
+            best_streak: updatedHabit.best_streak,
+            weekly_completion_rate: updatedHabit.weekly_completion_rate,
             is_completed_today: !!todayLog,
           };
         })

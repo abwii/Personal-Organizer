@@ -318,6 +318,7 @@ const logHabit = async (req, res) => {
 
     // Normalize to midnight UTC to ensure one completion per day
     logDate.setUTCHours(0, 0, 0, 0);
+    logDate.setUTCMilliseconds(0);
 
     // Check if log already exists for this date (prevent double counting)
     const existingLog = await HabitLog.findOne({
