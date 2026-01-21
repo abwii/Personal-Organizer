@@ -21,6 +21,7 @@ backend/
 - `npm run dev` : Démarre le serveur en mode développement avec hot reload (nodemon)
 - `npm test` : Exécute les tests Jest
 - `npm run lint` : Vérifie le code avec ESLint
+- `docker exec -e NODE_ENV=test personal-organizer-backend npm test` : Exécute les tests via Docker (recommandé)
 
 ## Variables d'environnement
 

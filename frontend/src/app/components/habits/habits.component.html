@@ -1,0 +1,74 @@
+<div class="habits-container">
+  <div class="habits-header">
+    <h1>My Habits</h1>
+    <button class="btn-primary" (click)="openCreateForm()">+ New Habit</button>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters">
+    <select [(ngModel)]="filterStatus" (change)="applyFilters()">
+      <option value="">All Statuses</option>
+      <option value="active">Active</option>
+      <option value="archived">Archived</option>
+    </select>
+    <select [(ngModel)]="filterFrequency" (change)="applyFilters()">
+      <option value="">All Frequencies</option>
+      <option value="daily">Daily</option>
+      <option value="weekly">Weekly</option>
+    </select>
+    <button class="btn-secondary" (click)="clearFilters()">Clear Filters</button>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="loading">
+    <p>Loading habits...</p>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="error" class="error">
+    <p>{{ error }}</p>
+    <button (click)="loadHabits()">Retry</button>
+  </div>
+
+  <!-- Habits List -->
+  <div *ngIf="!loading && !error" class="habits-list">
+    <div *ngIf="habits.length === 0" class="empty-state">
+      <p>No habits found. Create your first habit to get started!</p>
+    </div>
+
+    <div *ngFor="let habit of habits" class="habit-card" [class.archived]="habit.status === 'archived'">
+      <div class="habit-header">
+        <div>
+          <h3>{{ habit.title }}</h3>
+          <span class="badge badge-frequency">{{ habit.frequency }}</span>
+          <span class="badge" [class]="'badge-' + habit.status">{{ habit.status }}</span>
+        </div>
+        <div class="habit-actions">
+          <button class="btn-icon" (click)="openEditForm(habit)">✏️</button>
+          <button class="btn-icon" (click)="deleteHabit(habit)">🗑️</button>
+        </div>
+      </div>
+
+      <p *ngIf="habit.description" class="habit-description">{{ habit.description }}</p>
+
+      <div class="habit-stats">
+        <span class="stat-badge">🔥 {{ habit.current_streak || 0 }} day streak</span>
+        <span class="stat-badge">⭐ Best: {{ habit.best_streak || 0 }}</span>
+        <span class="stat-badge">📊 {{ habit.weekly_completion_rate || 0 }}% this week</span>
+      </div>
+
+      <div *ngIf="habit.category" class="habit-category">{{ habit.category }}</div>
+    </div>
+  </div>
+
+  <!-- Habit Form Modal -->
+  <div *ngIf="showForm" class="modal-overlay" (click)="closeForm()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <app-habit-form
+        [habit]="editingHabit"
+        (saved)="onHabitSaved()"
+        (cancelled)="closeForm()">
+      </app-habit-form>
+    </div>
+  </div>
+</div>

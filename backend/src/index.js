@@ -36,8 +36,9 @@ if (process.env.NODE_ENV !== "test") {
 
 // Routes
 app.use("/api/auth", require("./routes/auth"));
-app.use("/api/goals", require("./routes/goals"));
-// app.use('/api/habits', require('./routes/habits'));
+app.use('/api/goals', require('./routes/goals'));
+app.use('/api/habits', require('./routes/habits'));
+app.use('/api/dashboard', require('./routes/dashboard'));
 
 // Error handling middleware
 app.use((err, req, res, _next) => {
@@ -50,8 +51,9 @@ app.use((req, res) => {
   res.status(404).json({ error: "Route not found" });
 });
 
-// Only start server if not in test environment
-if (process.env.NODE_ENV !== "test") {
+// Only start server if not in test environment and not already listening
+// Check if we're in a test environment or if the app is already listening
+if (process.env.NODE_ENV !== 'test' && !app.listening) {
   app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
   });
