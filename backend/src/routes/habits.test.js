@@ -16,7 +16,6 @@ describe('Habits API', () => {
     // Clean up test data
     await Habit.deleteMany({ user_id: testUserId });
     await HabitLog.deleteMany({});
-    await mongoose.connection.close();
   });
 
   beforeEach(async () => {

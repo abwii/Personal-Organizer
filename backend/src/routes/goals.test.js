@@ -14,7 +14,6 @@ describe('Goals API', () => {
   afterAll(async () => {
     // Clean up test data
     await Goal.deleteMany({ user_id: testUserId });
-    await mongoose.connection.close();
   });
 
   beforeEach(async () => {
@@ -253,52 +252,81 @@ describe('Goals API', () => {
     });
   });
 
-  describe('Goal Progress Integration', () => {
-    it('should calculate progress when creating a goal with steps', async () => {
-      const goalData = {
-        user_id: testUserId.toString(),
-        title: 'Goal with Steps',
-        startDate: '2024-01-01',
-        dueDate: '2024-12-31',
-        steps: [
-          { title: 'Step 1', is_completed: true },
-          { title: 'Step 2', is_completed: false },
-        ],
-      };
+  describe('Step Routes Integration', () => {
+    let goalId;
 
-      const response = await request(app)
-        .post('/api/goals')
-        .send(goalData)
-        .expect(201);
-
-      expect(response.body.data.progress).toBe(50);
-      expect(response.body.data.steps).toHaveLength(2);
-    });
-
-    it('should update progress when updating steps', async () => {
+    beforeEach(async () => {
       const goal = await Goal.create({
         user_id: testUserId,
-        title: 'Update Progress Goal',
+        title: 'Goal for Steps',
         startDate: new Date('2024-01-01'),
         dueDate: new Date('2024-12-31'),
-        steps: [
-          { title: 'Step 1', is_completed: false },
-        ],
       });
+      goalId = goal._id.toString();
+    });
 
+    it('should add a step and update goal progress', async () => {
+      // Add first step
+      await request(app)
+        .post(`/api/goals/${goalId}/steps`)
+        .send({ title: 'Step 1' })
+        .expect(201);
+
+      let goal = await Goal.findById(goalId);
+      expect(goal.progress).toBe(0); // 0/1 completed
+
+      // Add second step
       const response = await request(app)
-        .put(`/api/goals/${goal._id}`)
-        .send({
-          user_id: testUserId.toString(),
-          steps: [
-            { title: 'Step 1', is_completed: true },
-            { title: 'Step 2', is_completed: true },
-          ],
-        })
+        .post(`/api/goals/${goalId}/steps`)
+        .send({ title: 'Step 2' })
+        .expect(201);
+
+      const stepId = response.body.data._id;
+
+      // Mark second step as completed
+      await request(app)
+        .put(`/api/goals/${goalId}/steps/${stepId}`)
+        .send({ is_completed: true })
         .expect(200);
 
-      expect(response.body.data.progress).toBe(100);
-      expect(response.body.data.steps).toHaveLength(2);
+      goal = await Goal.findById(goalId);
+      expect(goal.progress).toBe(50); // 1/2 completed
+    });
+
+    it('should get all steps for a goal', async () => {
+      await request(app)
+        .post(`/api/goals/${goalId}/steps`)
+        .send({ title: 'Step 1' });
+
+      const response = await request(app)
+        .get(`/api/goals/${goalId}/steps`)
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.count).toBe(1);
+      expect(response.body.data[0].title).toBe('Step 1');
+    });
+
+    it('should delete a step and update goal progress', async () => {
+      const res1 = await request(app)
+        .post(`/api/goals/${goalId}/steps`)
+        .send({ title: 'Step 1' });
+      
+      const stepId = res1.body.data._id;
+
+      await request(app)
+        .put(`/api/goals/${goalId}/steps/${stepId}`)
+        .send({ is_completed: true });
+
+      let goal = await Goal.findById(goalId);
+      expect(goal.progress).toBe(100);
+
+      await request(app)
+        .delete(`/api/goals/${goalId}/steps/${stepId}`)
+        .expect(200);
+
+      goal = await Goal.findById(goalId);
+      expect(goal.progress).toBe(0); // No steps left
     });
   });
 });

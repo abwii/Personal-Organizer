@@ -18,7 +18,6 @@ describe('Dashboard API', () => {
     await Goal.deleteMany({ user_id: testUserId });
     await Habit.deleteMany({ user_id: testUserId });
     await HabitLog.deleteMany({});
-    await mongoose.connection.close();
   });
 
   beforeEach(async () => {
@@ -203,6 +202,20 @@ describe('Dashboard API', () => {
         best_streak: 5,
         weekly_completion_rate: 71,
       });
+
+      // Create logs to support the streak of 3
+      const today = new Date();
+      today.setUTCHours(0, 0, 0, 0);
+      const yesterday = new Date(today);
+      yesterday.setUTCDate(yesterday.getUTCDate() - 1);
+      const twoDaysAgo = new Date(today);
+      twoDaysAgo.setUTCDate(twoDaysAgo.getUTCDate() - 2);
+
+      await HabitLog.create([
+        { habit_id: habit._id, date: today, is_completed: true },
+        { habit_id: habit._id, date: yesterday, is_completed: true },
+        { habit_id: habit._id, date: twoDaysAgo, is_completed: true },
+      ]);
 
       const response = await request(app)
         .get(`/api/dashboard?user_id=${testUserId.toString()}`)
