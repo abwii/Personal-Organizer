@@ -1,0 +1,15 @@
+#!/bin/bash
+echo "=== Frontend Diagnostic Script ==="
+echo ""
+echo "1. Checking Docker containers..."
+docker ps --filter "name=personal-organizer-frontend" --format "{{.Names}}\t{{.Status}}\t{{.Ports}}"
+echo ""
+echo "2. Checking frontend logs (last 20 lines)..."
+docker logs personal-organizer-frontend 2>&1 | tail -20
+echo ""
+echo "3. Testing HTTP connection..."
+curl -s -o /dev/null -w "HTTP Status: %{http_code}\n" http://localhost:4200 || echo "Connection failed"
+echo ""
+echo "4. Checking if port 4200 is listening..."
+lsof -i :4200 || echo "Port 4200 is not in use"
+echo ""

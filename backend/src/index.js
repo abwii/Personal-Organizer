@@ -34,6 +34,7 @@ if (process.env.NODE_ENV !== 'test') {
 // app.use('/api/auth', require('./routes/auth'));
 app.use('/api/goals', require('./routes/goals'));
 app.use('/api/habits', require('./routes/habits'));
+app.use('/api/dashboard', require('./routes/dashboard'));
 
 // Error handling middleware
 app.use((err, req, res, _next) => {
