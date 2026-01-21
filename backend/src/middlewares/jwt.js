@@ -23,7 +23,7 @@ module.exports = {
 
       // 4. Vérifie si l'utilisateur existe toujours en base de données
       // (Sécurité : utile si l'user a été supprimé entre temps)
-      const user = await UserModel.findById(decoded.id);
+      const user = await UserModel.findById(decoded.userId);
 
       if (!user) {
         return res.status(401).send({
