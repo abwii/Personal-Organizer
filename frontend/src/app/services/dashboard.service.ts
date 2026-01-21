@@ -31,6 +31,6 @@ export class DashboardService {
   constructor(private http: HttpClient) {}
 
   getDashboard(userId: string): Observable<DashboardResponse> {
-    return this.http.get<DashboardResponse>(`${this.apiUrl}?user_id=${userId}`);
+    return this.http.get<DashboardResponse>(`${this.apiUrl}`);
   }
 }

@@ -10,6 +10,12 @@ import { GoalsComponent } from './components/goals/goals.component';
 import { GoalFormComponent } from './components/goals/goal-form.component';
 import { HabitsComponent } from './components/habits/habits.component';
 import { HabitFormComponent } from './components/habits/habit-form.component';
+import { LoginComponent } from './components/login/login.component';
+import { RegisterComponent } from './components/register/register.component';
+import { ProfileComponent } from './components/profile/profile.component';
+
+import { HTTP_INTERCEPTORS } from '@angular/common/http';
+import { AuthInterceptor } from './auth.interceptor';
 
 @NgModule({
   declarations: [
@@ -18,7 +24,10 @@ import { HabitFormComponent } from './components/habits/habit-form.component';
     GoalsComponent,
     GoalFormComponent,
     HabitsComponent,
-    HabitFormComponent
+    HabitFormComponent,
+    LoginComponent,
+    RegisterComponent,
+    ProfileComponent
   ],
   imports: [
     BrowserModule, // BrowserModule includes CommonModule
@@ -26,7 +35,9 @@ import { HabitFormComponent } from './components/habits/habit-form.component';
     FormsModule,
     AppRoutingModule
   ],
-  providers: [],
+  providers: [
+    { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true }
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
