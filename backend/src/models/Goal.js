@@ -43,20 +43,6 @@ const goalSchema = new mongoose.Schema({
     default: 'active',
     required: true,
   },
-  steps: [{
-    title: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    dueDate: {
-      type: Date,
-    },
-    is_completed: {
-      type: Boolean,
-      default: false,
-    },
-  }],
   progress: {
     type: Number,
     default: 0,

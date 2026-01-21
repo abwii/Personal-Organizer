@@ -208,32 +208,19 @@ describe('Dashboard API', () => {
         status: 'active',
       });
 
-      // Create logs to match expected streak values
-      // For current_streak: 5, we need 5 consecutive days ending today
-      // For best_streak: 5, the current streak will also be 5
-      // For weekly_completion_rate: 71, we need 5 out of 7 days
+      // Create logs to support the streak of 3
       const today = new Date();
       today.setUTCHours(0, 0, 0, 0);
-      today.setUTCMilliseconds(0);
       const yesterday = new Date(today);
       yesterday.setUTCDate(yesterday.getUTCDate() - 1);
-      yesterday.setUTCMilliseconds(0);
       const twoDaysAgo = new Date(today);
       twoDaysAgo.setUTCDate(twoDaysAgo.getUTCDate() - 2);
-      twoDaysAgo.setUTCMilliseconds(0);
-      const threeDaysAgo = new Date(today);
-      threeDaysAgo.setUTCDate(threeDaysAgo.getUTCDate() - 3);
-      threeDaysAgo.setUTCMilliseconds(0);
-      const fourDaysAgo = new Date(today);
-      fourDaysAgo.setUTCDate(fourDaysAgo.getUTCDate() - 4);
-      fourDaysAgo.setUTCMilliseconds(0);
-      
-      // Create logs for 5 consecutive days (current streak will be 5)
-      await HabitLog.create({ habit_id: habit._id, date: fourDaysAgo, is_completed: true });
-      await HabitLog.create({ habit_id: habit._id, date: threeDaysAgo, is_completed: true });
-      await HabitLog.create({ habit_id: habit._id, date: twoDaysAgo, is_completed: true });
-      await HabitLog.create({ habit_id: habit._id, date: yesterday, is_completed: true });
-      await HabitLog.create({ habit_id: habit._id, date: today, is_completed: true });
+
+      await HabitLog.create([
+        { habit_id: habit._id, date: today, is_completed: true },
+        { habit_id: habit._id, date: yesterday, is_completed: true },
+        { habit_id: habit._id, date: twoDaysAgo, is_completed: true },
+      ]);
 
       const response = await request(app)
         .get(`/api/dashboard?user_id=${testUserId.toString()}`)

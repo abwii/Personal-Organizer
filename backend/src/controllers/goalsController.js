@@ -1,5 +1,4 @@
 const Goal = require('../models/Goal');
-const { calculateProgress } = require('../utils/goalUtils');
 
 // GET /api/goals - Get all goals with optional filtering
 const getGoals = async (req, res) => {
@@ -79,7 +78,6 @@ const createGoal = async (req, res) => {
       priority = 'medium',
       category,
       status = 'active',
-      steps = [],
       user_id, // Temporary: will use auth middleware later
     } = req.body;
 
@@ -141,8 +139,6 @@ const createGoal = async (req, res) => {
       priority,
       category,
       status,
-      steps,
-      progress: calculateProgress(steps),
     });
 
     await goal.save();
@@ -189,7 +185,6 @@ const updateGoal = async (req, res) => {
       priority,
       category,
       status,
-      steps,
     } = req.body;
 
     // Update fields if provided
@@ -215,10 +210,6 @@ const updateGoal = async (req, res) => {
         });
       }
       goal.status = status;
-    }
-    if (steps !== undefined) {
-      goal.steps = steps;
-      goal.progress = calculateProgress(steps);
     }
 
     // Validate dates if both are present
