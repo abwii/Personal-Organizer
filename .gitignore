@@ -36,6 +36,9 @@ coverage/
 # Docker
 .docker/
 
+# Angular
+.angular/
+
 # Misc
 *.pem
 .cache/
