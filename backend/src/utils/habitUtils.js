@@ -47,7 +47,9 @@ function calculateStreak(habitLogs) {
 
     if (diffDays === 0) {
       streak++;
-      checkDate.setDate(checkDate.getDate() - 1);
+      checkDate.setUTCDate(checkDate.getUTCDate() - 1);
+      checkDate.setUTCHours(0, 0, 0, 0);
+      checkDate.setUTCMilliseconds(0);
     } else if (diffDays > 0) {
       // Gap found
       break;

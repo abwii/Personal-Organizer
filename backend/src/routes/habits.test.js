@@ -21,8 +21,12 @@ describe('Habits API', () => {
 
   beforeEach(async () => {
     // Clean up before each test
+    // Delete logs for user's habits first, then delete habits
+    const habitIds = await Habit.find({ user_id: testUserId }).distinct('_id');
+    if (habitIds.length > 0) {
+      await HabitLog.deleteMany({ habit_id: { $in: habitIds } });
+    }
     await Habit.deleteMany({ user_id: testUserId });
-    await HabitLog.deleteMany({});
   });
 
   describe('POST /api/habits', () => {

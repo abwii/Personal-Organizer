@@ -14,18 +14,24 @@ describe('Dashboard API', () => {
   });
 
   afterAll(async () => {
-    // Clean up test data
-    await Goal.deleteMany({ user_id: testUserId });
+    // Clean up test data - delete logs first to avoid foreign key issues
+    const habitIds = await Habit.find({ user_id: testUserId }).distinct('_id');
+    await HabitLog.deleteMany({ habit_id: { $in: habitIds } });
     await Habit.deleteMany({ user_id: testUserId });
+    await Goal.deleteMany({ user_id: testUserId });
+    // Final cleanup of any remaining logs
     await HabitLog.deleteMany({});
-    await mongoose.connection.close();
   });
 
   beforeEach(async () => {
-    // Clean up before each test
-    await Goal.deleteMany({ user_id: testUserId });
+    // Clean up before each test - ensure all related data is removed
+    // Get habit IDs first, then delete logs, then habits
+    const habitIds = await Habit.find({ user_id: testUserId }).distinct('_id');
+    if (habitIds.length > 0) {
+      await HabitLog.deleteMany({ habit_id: { $in: habitIds } });
+    }
     await Habit.deleteMany({ user_id: testUserId });
-    await HabitLog.deleteMany({});
+    await Goal.deleteMany({ user_id: testUserId });
   });
 
   describe('GET /api/dashboard', () => {
@@ -211,12 +217,16 @@ describe('Dashboard API', () => {
       today.setUTCMilliseconds(0);
       const yesterday = new Date(today);
       yesterday.setUTCDate(yesterday.getUTCDate() - 1);
+      yesterday.setUTCMilliseconds(0);
       const twoDaysAgo = new Date(today);
       twoDaysAgo.setUTCDate(twoDaysAgo.getUTCDate() - 2);
+      twoDaysAgo.setUTCMilliseconds(0);
       const threeDaysAgo = new Date(today);
       threeDaysAgo.setUTCDate(threeDaysAgo.getUTCDate() - 3);
+      threeDaysAgo.setUTCMilliseconds(0);
       const fourDaysAgo = new Date(today);
       fourDaysAgo.setUTCDate(fourDaysAgo.getUTCDate() - 4);
+      fourDaysAgo.setUTCMilliseconds(0);
       
       // Create logs for 5 consecutive days (current streak will be 5)
       await HabitLog.create({ habit_id: habit._id, date: fourDaysAgo, is_completed: true });
@@ -261,8 +271,10 @@ describe('Dashboard API', () => {
       // Create logs for yesterday and today
       const today = new Date();
       today.setUTCHours(0, 0, 0, 0);
+      today.setUTCMilliseconds(0);
       const yesterday = new Date(today);
       yesterday.setUTCDate(yesterday.getUTCDate() - 1);
+      yesterday.setUTCMilliseconds(0);
 
       await HabitLog.create({
         habit_id: habit._id,
