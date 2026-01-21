@@ -10,6 +10,7 @@ import { GoalsComponent } from './components/goals/goals.component';
 import { GoalFormComponent } from './components/goals/goal-form.component';
 import { HabitsComponent } from './components/habits/habits.component';
 import { HabitFormComponent } from './components/habits/habit-form.component';
+import { StatsComponent } from './components/stats/stats.component';
 
 @NgModule({
   declarations: [
@@ -18,7 +19,8 @@ import { HabitFormComponent } from './components/habits/habit-form.component';
     GoalsComponent,
     GoalFormComponent,
     HabitsComponent,
-    HabitFormComponent
+    HabitFormComponent,
+    StatsComponent
   ],
   imports: [
     BrowserModule, // BrowserModule includes CommonModule

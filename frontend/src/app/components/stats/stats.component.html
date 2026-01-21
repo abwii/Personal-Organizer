@@ -1,0 +1,155 @@
+<div class="stats-container">
+  <h1>Statistics & Analytics</h1>
+
+  <div *ngIf="loading" class="loading">
+    <p>Loading statistics...</p>
+  </div>
+
+  <div *ngIf="error" class="error">
+    <p>{{ error }}</p>
+    <button (click)="loadStats()">Retry</button>
+  </div>
+
+  <div *ngIf="statsData && !loading" class="stats-content">
+    <!-- Goal Progression Chart -->
+    <section class="stats-section" *ngIf="goalProgressionChartData">
+      <h2>Goal Progression</h2>
+      <p class="section-description">Compare your current progress with expected progress for each goal</p>
+      <div class="chart-container">
+        <canvas #goalProgressionChart></canvas>
+      </div>
+    </section>
+
+    <!-- Habit Heatmap -->
+    <section class="stats-section">
+      <h2>Habit Consistency Heatmap</h2>
+      <p class="section-description">Visual representation of your habit completion over the last year. Each square represents a day.</p>
+      <div class="heatmap-container">
+        <div *ngIf="heatmapMonths.length === 0" class="empty-state">
+          <p>No habit data available for heatmap. Start logging habits to see your consistency!</p>
+        </div>
+        <div *ngIf="heatmapMonths.length > 0" class="heatmap-wrapper">
+          <div class="heatmap-weekdays">
+            <div class="weekday-label"></div>
+            <div class="weekday-label">Mon</div>
+            <div class="weekday-label">Wed</div>
+            <div class="weekday-label">Fri</div>
+          </div>
+          <div class="heatmap-months-container">
+            <div *ngFor="let monthKey of heatmapMonths" class="heatmap-month">
+              <div class="month-header">
+                <h3 class="month-title">{{ getMonthName(monthKey) }}</h3>
+              </div>
+              <div class="heatmap-grid">
+                <!-- Empty cells for days before month starts -->
+                <div *ngFor="let empty of getEmptyDaysBeforeMonth(monthKey)" class="heatmap-day empty"></div>
+                <!-- Actual days -->
+                <div *ngFor="let entry of heatmapDays[monthKey]" 
+                     class="heatmap-day"
+                     [class]="'heatmap-day intensity-' + entry.intensity"
+                     [style.background-color]="getIntensityColor(entry.intensity)"
+                     [title]="entry.date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) + ': ' + entry.count + ' completion(s)'">
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="heatmap-legend">
+            <span class="legend-label">Less</span>
+            <div class="legend-colors">
+              <div class="legend-color" style="background-color: #ebedf0;" title="0 completions"></div>
+              <div class="legend-color" style="background-color: #c6e48b;" title="1 completion"></div>
+              <div class="legend-color" style="background-color: #7bc96f;" title="2 completions"></div>
+              <div class="legend-color" style="background-color: #239a3b;" title="3 completions"></div>
+              <div class="legend-color" style="background-color: #196127;" title="4+ completions"></div>
+            </div>
+            <span class="legend-label">More</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Category Statistics -->
+    <section class="stats-section">
+      <h2>Category Statistics</h2>
+      
+      <div class="charts-grid">
+        <!-- Goals Success Rate Pie Chart -->
+        <div class="chart-wrapper" *ngIf="categorySuccessChartData">
+          <h3>Success Rate by Category (Goals)</h3>
+          <div class="chart-container">
+            <canvas #categorySuccessChart></canvas>
+          </div>
+        </div>
+
+        <!-- Habits Average Streak Chart -->
+        <div class="chart-wrapper" *ngIf="habitStreakChartData">
+          <h3>Average Streak by Category (Habits)</h3>
+          <div class="chart-container">
+            <canvas #habitStreakChart></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Detailed Category Stats -->
+      <div class="category-details">
+        <!-- Goals by Category -->
+        <div class="category-section">
+          <h3>Goals by Category</h3>
+          <div *ngIf="getGoalCategories().length === 0" class="empty-state">
+            <p>No goals with categories found</p>
+          </div>
+          <div *ngFor="let category of getGoalCategories()" class="category-card">
+            <h4>{{ category || 'Uncategorized' }}</h4>
+            <div class="stats-grid">
+              <div class="stat-item">
+                <span class="stat-label">Total:</span>
+                <span class="stat-value">{{ statsData.categoryStats.goals[category].total }}</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-label">Completed:</span>
+                <span class="stat-value">{{ statsData.categoryStats.goals[category].completed }}</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-label">Active:</span>
+                <span class="stat-value">{{ statsData.categoryStats.goals[category].active }}</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-label">Success Rate:</span>
+                <span class="stat-value">{{ statsData.categoryStats.goals[category].successRate }}%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Habits by Category -->
+        <div class="category-section">
+          <h3>Habits by Category</h3>
+          <div *ngIf="getHabitCategories().length === 0" class="empty-state">
+            <p>No habits with categories found</p>
+          </div>
+          <div *ngFor="let category of getHabitCategories()" class="category-card">
+            <h4>{{ category || 'Uncategorized' }}</h4>
+            <div class="stats-grid">
+              <div class="stat-item">
+                <span class="stat-label">Total:</span>
+                <span class="stat-value">{{ statsData.categoryStats.habits[category].total }}</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-label">Active:</span>
+                <span class="stat-value">{{ statsData.categoryStats.habits[category].active }}</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-label">Avg Streak:</span>
+                <span class="stat-value">{{ statsData.categoryStats.habits[category].averageStreak }}</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-label">Avg Weekly Completion:</span>
+                <span class="stat-value">{{ statsData.categoryStats.habits[category].averageWeeklyCompletion }}%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
