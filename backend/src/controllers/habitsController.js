@@ -408,6 +408,100 @@ const logHabit = async (req, res) => {
   }
 };
 
+// DELETE /api/habits/:id/log - Remove a habit log for a specific date
+const unlogHabit = async (req, res) => {
+  try {
+    const { id } = req.params;
+    // Support both body and query parameters for DELETE requests
+    const date = req.body?.date || req.query?.date;
+    const user_id = req.body?.user_id || req.query?.user_id;
+
+    const userId = req.user?.id || user_id;
+
+    // Verify habit exists and belongs to user
+    const habit = await Habit.findOne({ _id: id, user_id: userId });
+
+    if (!habit) {
+      return res.status(404).json({
+        success: false,
+        error: 'Habit not found',
+      });
+    }
+
+    // Parse date and normalize to UTC midnight
+    let logDate;
+    if (date) {
+      logDate = new Date(date);
+      if (Number.isNaN(logDate.getTime())) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid date format',
+        });
+      }
+    } else {
+      // Default to today at midnight UTC
+      logDate = new Date();
+    }
+
+    // Normalize to midnight UTC
+    logDate.setUTCHours(0, 0, 0, 0);
+    logDate.setUTCMilliseconds(0);
+
+    // Find and delete the log for this date
+    const tomorrow = new Date(logDate);
+    tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
+    tomorrow.setUTCHours(0, 0, 0, 0);
+    tomorrow.setUTCMilliseconds(0);
+
+    const deletedLog = await HabitLog.findOneAndDelete({
+      habit_id: id,
+      date: {
+        $gte: logDate,
+        $lt: tomorrow,
+      },
+    });
+
+    if (!deletedLog) {
+      return res.status(404).json({
+        success: false,
+        error: 'Habit log not found for this date',
+      });
+    }
+
+    // Recalculate streak and weekly completion
+    const allLogs = await HabitLog.find({ habit_id: id });
+    const newStreak = calculateStreak(allLogs);
+    const weeklyCompletion = calculateWeeklyCompletion(allLogs);
+
+    // Update habit with new streak and weekly completion
+    habit.current_streak = newStreak;
+    habit.weekly_completion_rate = weeklyCompletion;
+    // Note: best_streak should not decrease when unlogging
+    await habit.save();
+
+    res.status(200).json({
+      success: true,
+      data: {
+        current_streak: habit.current_streak,
+        best_streak: habit.best_streak,
+        weekly_completion_rate: habit.weekly_completion_rate,
+      },
+    });
+  } catch (error) {
+    console.error('Error unlogging habit:', error);
+    if (error.name === 'CastError') {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid habit ID',
+      });
+    }
+    res.status(500).json({
+      success: false,
+      error: 'Failed to unlog habit',
+    });
+  }
+};
+
 module.exports = {
   getHabits,
   getHabitById,
@@ -415,4 +509,5 @@ module.exports = {
   updateHabit,
   deleteHabit,
   logHabit,
+  unlogHabit,
 };

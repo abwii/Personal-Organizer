@@ -72,4 +72,11 @@ export class HabitsService {
     if (date) body.date = date;
     return this.http.post<HabitResponse>(`${this.apiUrl}/${id}/log`, body);
   }
+
+  unlogHabit(id: string, userId: string, date?: string): Observable<HabitResponse> {
+    // Use query parameters for DELETE request (more RESTful)
+    let url = `${this.apiUrl}/${id}/log?user_id=${userId}`;
+    if (date) url += `&date=${date}`;
+    return this.http.delete<HabitResponse>(url);
+  }
 }

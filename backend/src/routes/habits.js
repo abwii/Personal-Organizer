@@ -7,6 +7,7 @@ const {
   updateHabit,
   deleteHabit,
   logHabit,
+  unlogHabit,
 } = require('../controllers/habitsController');
 
 // GET /api/habits - Get all habits (with optional query params: ?status=active&frequency=daily)
@@ -21,10 +22,13 @@ router.post('/', createHabit);
 // PUT /api/habits/:id - Update a habit
 router.put('/:id', updateHabit);
 
-// DELETE /api/habits/:id - Delete a habit
-router.delete('/:id', deleteHabit);
-
 // POST /api/habits/:id/log - Log a habit completion for a specific date
 router.post('/:id/log', logHabit);
+
+// DELETE /api/habits/:id/log - Remove a habit log for a specific date
+router.delete('/:id/log', unlogHabit);
+
+// DELETE /api/habits/:id - Delete a habit
+router.delete('/:id', deleteHabit);
 
 module.exports = router;
