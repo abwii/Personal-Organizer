@@ -16,11 +16,13 @@ function calculateStreak(habitLogs) {
 
   let streak = 0;
   let currentDate = new Date();
-  currentDate.setHours(0, 0, 0, 0);
+  currentDate.setUTCHours(0, 0, 0, 0);
+  currentDate.setUTCMilliseconds(0);
 
   // Check if the most recent log is today or yesterday
   const latestLogDate = new Date(sortedLogs[0].date);
-  latestLogDate.setHours(0, 0, 0, 0);
+  latestLogDate.setUTCHours(0, 0, 0, 0);
+  latestLogDate.setUTCMilliseconds(0);
 
   const diffToToday = Math.floor(
     (currentDate - latestLogDate) / (1000 * 60 * 60 * 24)
@@ -36,7 +38,8 @@ function calculateStreak(habitLogs) {
 
   for (const log of sortedLogs) {
     const logDate = new Date(log.date);
-    logDate.setHours(0, 0, 0, 0);
+    logDate.setUTCHours(0, 0, 0, 0);
+    logDate.setUTCMilliseconds(0);
 
     const diffDays = Math.floor(
       (checkDate - logDate) / (1000 * 60 * 60 * 24)
@@ -69,22 +72,25 @@ function calculateWeeklyCompletion(habitLogs) {
   }
 
   const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  today.setUTCHours(0, 0, 0, 0);
+  today.setUTCMilliseconds(0);
 
   const sevenDaysAgo = new Date(today);
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6); // Last 7 days including today
+  sevenDaysAgo.setUTCDate(sevenDaysAgo.getUTCDate() - 6); // Last 7 days including today
 
   const recentLogs = habitLogs.filter(log => {
     if (!log.is_completed) return false;
     const logDate = new Date(log.date);
-    logDate.setHours(0, 0, 0, 0);
+    logDate.setUTCHours(0, 0, 0, 0);
+    logDate.setUTCMilliseconds(0);
     return logDate >= sevenDaysAgo && logDate <= today;
   });
 
   // Unique dates to avoid double counting if multiple logs exist for the same day
   const uniqueDates = new Set(recentLogs.map(log => {
     const d = new Date(log.date);
-    d.setHours(0, 0, 0, 0);
+    d.setUTCHours(0, 0, 0, 0);
+    d.setUTCMilliseconds(0);
     return d.getTime();
   }));
 

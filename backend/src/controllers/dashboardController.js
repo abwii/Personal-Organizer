@@ -1,7 +1,7 @@
 const Goal = require('../models/Goal');
 const Habit = require('../models/Habit');
 const HabitLog = require('../models/HabitLog');
-const { calculateStreak } = require('../utils/habitUtils');
+const { calculateStreak, calculateWeeklyCompletion } = require('../utils/habitUtils');
 
 // GET /api/dashboard - Get dashboard aggregated data
 const getDashboard = async (req, res) => {
@@ -33,27 +33,33 @@ const getDashboard = async (req, res) => {
       activeHabits.map(async (habit) => {
         const logs = await HabitLog.find({ habit_id: habit._id });
         const currentStreak = calculateStreak(logs);
+        const weeklyCompletion = calculateWeeklyCompletion(logs);
         
-        // Update habit streak if needed
-        if (habit.current_streak !== currentStreak) {
-          habit.current_streak = currentStreak;
-          if (currentStreak > habit.best_streak) {
-            habit.best_streak = currentStreak;
-          }
-          await habit.save();
+        // Update habit streak and weekly completion
+        // Always update to ensure consistency, especially after saves from other operations
+        habit.current_streak = currentStreak;
+        habit.weekly_completion_rate = weeklyCompletion;
+        if (currentStreak > habit.best_streak) {
+          habit.best_streak = currentStreak;
+        }
+        // Save and wait for it to complete
+        await habit.save();
+        
+        // Reload to ensure we have the latest data
+        const updatedHabit = await Habit.findById(habit._id);
+        
+        if (updatedHabit.best_streak > bestStreak) {
+          bestStreak = updatedHabit.best_streak;
         }
 
-        if (habit.best_streak > bestStreak) {
-          bestStreak = habit.best_streak;
-        }
-
-        return habit;
+        return updatedHabit;
       })
     );
 
-    // Get today's date at midnight UTC
+    // Get today's date at midnight UTC (normalize to ensure no milliseconds)
     const today = new Date();
     today.setUTCHours(0, 0, 0, 0);
+    today.setUTCMilliseconds(0);
     const tomorrow = new Date(today);
     tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
 
@@ -62,23 +68,29 @@ const getDashboard = async (req, res) => {
       habitsWithStreaks
         .filter((habit) => habit.frequency === 'daily')
         .map(async (habit) => {
-          // Check if habit was already logged today
+          // Check if habit was already completed today (must have a log with is_completed: true)
+          // Query for logs on today's date (normalized to UTC midnight)
           const todayLog = await HabitLog.findOne({
             habit_id: habit._id,
             date: {
               $gte: today,
               $lt: tomorrow,
             },
+            is_completed: true,
           });
 
+          // Reload habit to get updated values after streak calculation
+          // Ensure we get fresh data from database
+          const updatedHabit = await Habit.findById(habit._id);
+
           return {
-            _id: habit._id,
-            title: habit.title,
-            description: habit.description,
-            category: habit.category,
-            current_streak: habit.current_streak,
-            best_streak: habit.best_streak,
-            weekly_completion_rate: habit.weekly_completion_rate,
+            _id: updatedHabit._id,
+            title: updatedHabit.title,
+            description: updatedHabit.description,
+            category: updatedHabit.category,
+            current_streak: updatedHabit.current_streak,
+            best_streak: updatedHabit.best_streak,
+            weekly_completion_rate: updatedHabit.weekly_completion_rate,
             is_completed_today: !!todayLog,
           };
         })

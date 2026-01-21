@@ -1,0 +1,80 @@
+<div class="goals-container">
+  <div class="goals-header">
+    <h1>My Goals</h1>
+    <button class="btn-primary" (click)="openCreateForm()">+ New Goal</button>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters">
+    <select [(ngModel)]="filterStatus" (change)="applyFilters()">
+      <option value="">All Statuses</option>
+      <option value="active">Active</option>
+      <option value="completed">Completed</option>
+      <option value="abandoned">Abandoned</option>
+    </select>
+    <select [(ngModel)]="filterPriority" (change)="applyFilters()">
+      <option value="">All Priorities</option>
+      <option value="low">Low</option>
+      <option value="medium">Medium</option>
+      <option value="high">High</option>
+    </select>
+    <button class="btn-secondary" (click)="clearFilters()">Clear Filters</button>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="loading">
+    <p>Loading goals...</p>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="error" class="error">
+    <p>{{ error }}</p>
+    <button (click)="loadGoals()">Retry</button>
+  </div>
+
+  <!-- Goals List -->
+  <div *ngIf="!loading && !error" class="goals-list">
+    <div *ngIf="goals.length === 0" class="empty-state">
+      <p>No goals found. Create your first goal to get started!</p>
+    </div>
+
+    <div *ngFor="let goal of goals" class="goal-card" [class.completed]="goal.status === 'completed'">
+      <div class="goal-header">
+        <div>
+          <h3>{{ goal.title }}</h3>
+          <span class="badge" [class]="'badge-' + goal.priority">{{ goal.priority }}</span>
+          <span class="badge" [class]="'badge-' + goal.status">{{ goal.status }}</span>
+        </div>
+        <div class="goal-actions">
+          <button class="btn-icon" (click)="openEditForm(goal)">✏️</button>
+          <button class="btn-icon" (click)="deleteGoal(goal)">🗑️</button>
+        </div>
+      </div>
+
+      <p *ngIf="goal.description" class="goal-description">{{ goal.description }}</p>
+
+      <div class="goal-dates">
+        <span>Start: {{ goal.startDate | date:'shortDate' }}</span>
+        <span>Due: {{ goal.dueDate | date:'shortDate' }}</span>
+      </div>
+
+      <div *ngIf="goal.category" class="goal-category">{{ goal.category }}</div>
+
+      <div *ngIf="goal.progress !== undefined" class="progress-bar">
+        <div class="progress-fill" [style.width.%]="goal.progress"></div>
+        <span class="progress-text">{{ goal.progress }}%</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Goal Form Modal -->
+  <div *ngIf="showForm" class="modal-overlay" (click)="closeForm()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <app-goal-form
+        [goal]="editingGoal"
+        (saved)="onGoalSaved()"
+        (cancelled)="closeForm()">
+      </app-goal-form>
+    </div>
+  </div>
+</div>

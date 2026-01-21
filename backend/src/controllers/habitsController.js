@@ -318,11 +318,21 @@ const logHabit = async (req, res) => {
 
     // Normalize to midnight UTC to ensure one completion per day
     logDate.setUTCHours(0, 0, 0, 0);
+    logDate.setUTCMilliseconds(0);
 
     // Check if log already exists for this date (prevent double counting)
+    // Use range query to handle any date storage differences
+    const tomorrow = new Date(logDate);
+    tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
+    tomorrow.setUTCHours(0, 0, 0, 0);
+    tomorrow.setUTCMilliseconds(0);
+    
     const existingLog = await HabitLog.findOne({
       habit_id: id,
-      date: logDate,
+      date: {
+        $gte: logDate,
+        $lt: tomorrow,
+      },
     });
 
     if (existingLog) {
@@ -333,13 +343,26 @@ const logHabit = async (req, res) => {
     }
 
     // Create new log
-    const habitLog = new HabitLog({
-      habit_id: id,
-      date: logDate,
-      is_completed: true,
-    });
+    // Also handle unique index violation as a fallback
+    let habitLog;
+    try {
+      habitLog = new HabitLog({
+        habit_id: id,
+        date: logDate,
+        is_completed: true,
+      });
 
-    await habitLog.save();
+      await habitLog.save();
+    } catch (error) {
+      // Handle duplicate key error from unique index
+      if (error.code === 11000 || error.name === 'MongoServerError') {
+        return res.status(400).json({
+          success: false,
+          error: 'Habit already logged for this date',
+        });
+      }
+      throw error;
+    }
 
     // Recalculate streak and weekly completion
     const allLogs = await HabitLog.find({ habit_id: id });

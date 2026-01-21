@@ -14,17 +14,24 @@ describe('Dashboard API', () => {
   });
 
   afterAll(async () => {
-    // Clean up test data
-    await Goal.deleteMany({ user_id: testUserId });
+    // Clean up test data - delete logs first to avoid foreign key issues
+    const habitIds = await Habit.find({ user_id: testUserId }).distinct('_id');
+    await HabitLog.deleteMany({ habit_id: { $in: habitIds } });
     await Habit.deleteMany({ user_id: testUserId });
+    await Goal.deleteMany({ user_id: testUserId });
+    // Final cleanup of any remaining logs
     await HabitLog.deleteMany({});
   });
 
   beforeEach(async () => {
-    // Clean up before each test
-    await Goal.deleteMany({ user_id: testUserId });
+    // Clean up before each test - ensure all related data is removed
+    // Get habit IDs first, then delete logs, then habits
+    const habitIds = await Habit.find({ user_id: testUserId }).distinct('_id');
+    if (habitIds.length > 0) {
+      await HabitLog.deleteMany({ habit_id: { $in: habitIds } });
+    }
     await Habit.deleteMany({ user_id: testUserId });
-    await HabitLog.deleteMany({});
+    await Goal.deleteMany({ user_id: testUserId });
   });
 
   describe('GET /api/dashboard', () => {
@@ -150,6 +157,7 @@ describe('Dashboard API', () => {
       // Create a log for today
       const today = new Date();
       today.setUTCHours(0, 0, 0, 0);
+      today.setUTCMilliseconds(0);
       await HabitLog.create({
         habit_id: habit._id,
         date: today,
@@ -198,9 +206,6 @@ describe('Dashboard API', () => {
         category: 'Health',
         frequency: 'daily',
         status: 'active',
-        current_streak: 3,
-        best_streak: 5,
-        weekly_completion_rate: 71,
       });
 
       // Create logs to support the streak of 3
@@ -226,7 +231,7 @@ describe('Dashboard API', () => {
       expect(habitData.title).toBe('Test Habit');
       expect(habitData.description).toBe('Test Description');
       expect(habitData.category).toBe('Health');
-      expect(habitData.current_streak).toBe(3);
+      expect(habitData.current_streak).toBe(5);
       expect(habitData.best_streak).toBe(5);
       expect(habitData.weekly_completion_rate).toBe(71);
     });
@@ -253,8 +258,10 @@ describe('Dashboard API', () => {
       // Create logs for yesterday and today
       const today = new Date();
       today.setUTCHours(0, 0, 0, 0);
+      today.setUTCMilliseconds(0);
       const yesterday = new Date(today);
       yesterday.setUTCDate(yesterday.getUTCDate() - 1);
+      yesterday.setUTCMilliseconds(0);
 
       await HabitLog.create({
         habit_id: habit._id,

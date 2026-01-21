@@ -1,0 +1,70 @@
+<div class="container">
+  <header>
+    <h1>{{ 'Personal Organizer' }}</h1>
+    <p class="subtitle">Your personal goals and habits tracker</p>
+  </header>
+
+  <div *ngIf="loading" class="loading">
+    <p>Loading dashboard...</p>
+  </div>
+
+  <div *ngIf="error" class="error">
+    <p>{{ error }}</p>
+    <button (click)="loadDashboard()">Retry</button>
+  </div>
+
+  <div *ngIf="dashboardData && !loading" class="dashboard">
+    <!-- Statistics Cards -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon">🎯</div>
+        <div class="stat-value">{{ dashboardData.completed_goals_count }}</div>
+        <div class="stat-label">Completed Goals</div>
+      </div>
+      
+      <div class="stat-card">
+        <div class="stat-icon">🔥</div>
+        <div class="stat-value">{{ dashboardData.best_streak }}</div>
+        <div class="stat-label">Best Streak</div>
+      </div>
+    </div>
+
+    <!-- Habits Today -->
+    <div class="habits-section">
+      <h2>Habits for Today</h2>
+      
+      <div *ngIf="dashboardData.habits_today.length === 0" class="empty-state">
+        <p>No daily habits to complete today. Create some habits to get started!</p>
+      </div>
+
+      <div class="habits-grid">
+        <div *ngFor="let habit of dashboardData.habits_today" 
+             class="habit-card" 
+             [class.completed]="habit.is_completed_today">
+          <div class="habit-header">
+            <h3>{{ habit.title }}</h3>
+            <button 
+              class="check-button"
+              [class.checked]="habit.is_completed_today"
+              (click)="toggleHabitCompletion(habit)"
+              [disabled]="habit.is_completed_today">
+              {{ habit.is_completed_today ? '✓' : '○' }}
+            </button>
+          </div>
+          
+          <p *ngIf="habit.description" class="habit-description">{{ habit.description }}</p>
+          
+          <div class="habit-stats">
+            <span class="stat-badge">🔥 {{ habit.current_streak }} day streak</span>
+            <span class="stat-badge">⭐ Best: {{ habit.best_streak }}</span>
+            <span class="stat-badge">📊 {{ habit.weekly_completion_rate }}% this week</span>
+          </div>
+          
+          <div *ngIf="habit.category" class="habit-category">
+            {{ habit.category }}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
