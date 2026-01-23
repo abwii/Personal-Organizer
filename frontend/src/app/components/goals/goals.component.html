@@ -1,7 +1,10 @@
 <div class="goals-container">
   <div class="goals-header">
     <h1>My Goals</h1>
-    <button class="btn-primary" (click)="openCreateForm()">+ New Goal</button>
+    <div class="header-actions">
+      <button class="btn-secondary" (click)="openTemplatesModal()">📋 Templates</button>
+      <button class="btn-primary" (click)="openCreateForm()">+ New Goal</button>
+    </div>
   </div>
 
   <!-- Filters -->
@@ -46,8 +49,9 @@
           <span class="badge" [class]="'badge-' + goal.status">{{ goal.status }}</span>
         </div>
         <div class="goal-actions">
-          <button class="btn-icon" (click)="openEditForm(goal)">✏️</button>
-          <button class="btn-icon" (click)="deleteGoal(goal)">🗑️</button>
+          <button class="btn-icon" (click)="duplicateGoal(goal)" title="Duplicate goal">📋</button>
+          <button class="btn-icon" (click)="openEditForm(goal)" title="Edit goal">✏️</button>
+          <button class="btn-icon" (click)="deleteGoal(goal)" title="Delete goal">🗑️</button>
         </div>
       </div>
 
@@ -70,6 +74,53 @@
         (saved)="onGoalSaved()"
         (cancelled)="closeForm()">
       </app-goal-form>
+    </div>
+  </div>
+
+  <!-- Templates Modal -->
+  <div *ngIf="showTemplates" class="modal-overlay" (click)="closeTemplatesModal()">
+    <div class="modal-content templates-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Goal Templates</h2>
+        <button class="btn-icon" (click)="closeTemplatesModal()">✕</button>
+      </div>
+      
+      <div *ngIf="loadingTemplates" class="loading">
+        <p>Loading templates...</p>
+      </div>
+
+      <div *ngIf="!loadingTemplates" class="templates-list">
+        <div *ngIf="templates.length === 0" class="empty-state">
+          <p>No templates available.</p>
+        </div>
+
+        <div *ngFor="let template of templates" class="template-card">
+          <div class="template-header">
+            <h3>{{ template.name }}</h3>
+            <span *ngIf="template.isSystem" class="badge badge-system">System</span>
+            <span *ngIf="template.category" class="badge" [class]="'badge-' + template.priority">{{ template.category }}</span>
+          </div>
+          
+          <p *ngIf="template.description" class="template-description">{{ template.description }}</p>
+          
+          <div class="template-info">
+            <span class="info-item">📅 {{ template.estimatedDuration }} days</span>
+            <span class="info-item">📝 {{ template.steps?.length || 0 }} steps</span>
+          </div>
+
+          <div *ngIf="template.steps && template.steps.length > 0" class="template-steps-preview">
+            <strong>Steps:</strong>
+            <ul>
+              <li *ngFor="let step of template.steps.slice(0, 3)">{{ step.title }}</li>
+              <li *ngIf="template.steps.length > 3" class="more-steps">+ {{ template.steps.length - 3 }} more</li>
+            </ul>
+          </div>
+
+          <button class="btn-primary" (click)="createGoalFromTemplate(template)">
+            Use Template
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </div>

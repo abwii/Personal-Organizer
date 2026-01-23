@@ -2,6 +2,7 @@ const request = require('supertest');
 const mongoose = require('mongoose');
 const app = require('../index');
 const Goal = require('../models/Goal');
+const Step = require('../models/Step');
 
 describe('Goals API', () => {
   let testUserId;
@@ -18,6 +19,10 @@ describe('Goals API', () => {
 
   beforeEach(async () => {
     // Clean up before each test
+    const goalIds = await Goal.find({ user_id: testUserId }).distinct('_id');
+    if (goalIds.length > 0) {
+      await Step.deleteMany({ goal_id: { $in: goalIds } });
+    }
     await Goal.deleteMany({ user_id: testUserId });
   });
 

@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { GoalsService, Goal } from '../../services/goals.service';
+import { TemplatesService, GoalTemplate } from '../../services/templates.service';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
@@ -15,9 +16,13 @@ export class GoalsComponent implements OnInit {
   editingGoal: Goal | null = null;
   filterStatus: string = '';
   filterPriority: string = '';
+  showTemplates = false;
+  templates: GoalTemplate[] = [];
+  loadingTemplates = false;
 
   constructor(
     private goalsService: GoalsService,
+    private templatesService: TemplatesService,
     private authService: AuthService
   ) {}
 
@@ -90,5 +95,75 @@ export class GoalsComponent implements OnInit {
     this.filterStatus = '';
     this.filterPriority = '';
     this.loadGoals();
+  }
+
+  openTemplatesModal() {
+    this.showTemplates = true;
+    this.loadTemplates();
+  }
+
+  closeTemplatesModal() {
+    this.showTemplates = false;
+  }
+
+  loadTemplates() {
+    this.loadingTemplates = true;
+    const userId = this.authService.getCurrentUserId();
+    this.templatesService.getTemplates(userId).subscribe({
+      next: (response) => {
+        this.templates = response.data;
+        this.loadingTemplates = false;
+      },
+      error: (err) => {
+        this.error = 'Failed to load templates';
+        this.loadingTemplates = false;
+        console.error('Error loading templates:', err);
+      }
+    });
+  }
+
+  createGoalFromTemplate(template: GoalTemplate) {
+    const userId = this.authService.getCurrentUserId();
+    const today = new Date();
+    const dueDate = new Date(today);
+    dueDate.setDate(dueDate.getDate() + (template.estimatedDuration || 30));
+
+    this.templatesService.createGoalFromTemplate(template._id!, {
+      user_id: userId,
+      startDate: today.toISOString().split('T')[0],
+      dueDate: dueDate.toISOString().split('T')[0],
+    }).subscribe({
+      next: (response) => {
+        this.closeTemplatesModal();
+        this.loadGoals();
+      },
+      error: (err) => {
+        this.error = 'Failed to create goal from template';
+        console.error('Error creating goal from template:', err);
+      }
+    });
+  }
+
+  duplicateGoal(goal: Goal) {
+    if (!goal._id) return;
+    if (!confirm(`Duplicate "${goal.title}"?`)) return;
+
+    const userId = this.authService.getCurrentUserId();
+    const today = new Date();
+    const duration = new Date(goal.dueDate).getTime() - new Date(goal.startDate).getTime();
+    const newDueDate = new Date(today.getTime() + duration);
+
+    this.goalsService.duplicateGoal(goal._id, userId, {
+      startDate: today.toISOString().split('T')[0],
+      dueDate: newDueDate.toISOString().split('T')[0],
+    }).subscribe({
+      next: () => {
+        this.loadGoals();
+      },
+      error: (err) => {
+        this.error = 'Failed to duplicate goal';
+        console.error('Error duplicating goal:', err);
+      }
+    });
   }
 }
