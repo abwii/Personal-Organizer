@@ -6,7 +6,7 @@ const { calculateStreak, calculateWeeklyCompletion } = require('../utils/habitUt
 // GET /api/dashboard - Get dashboard aggregated data
 const getDashboard = async (req, res) => {
   try {
-    const userId = req.user?.id || req.query.user_id || req.body.user_id; // Temporary: will use auth middleware later
+    const userId = req.user?.id || req.query.user_id || req.body.user_id;
 
     if (!userId) {
       return res.status(400).json({

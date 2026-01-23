@@ -1,5 +1,6 @@
 const request = require('supertest');
 const mongoose = require('mongoose');
+const jwt = require('jsonwebtoken');
 const app = require('../index');
 const Goal = require('../models/Goal');
 const Habit = require('../models/Habit');
@@ -7,10 +8,15 @@ const HabitLog = require('../models/HabitLog');
 
 describe('Dashboard API', () => {
   let testUserId;
+  let token;
 
   beforeAll(async () => {
     // Create a test user ID
     testUserId = new mongoose.Types.ObjectId();
+    // Generate a valid token for the test user
+    token = jwt.sign({ user: { id: testUserId } }, process.env.JWT_SECRET || 'your_jwt_secret', {
+      expiresIn: '1h',
+    });
   });
 
   afterAll(async () => {
@@ -76,7 +82,8 @@ describe('Dashboard API', () => {
       });
 
       const response = await request(app)
-        .get(`/api/dashboard?user_id=${testUserId.toString()}`)
+        .get('/api/dashboard')
+        .set('Authorization', `Bearer ${token}`)
         .expect(200);
 
       expect(response.body.success).toBe(true);
@@ -95,7 +102,8 @@ describe('Dashboard API', () => {
       });
 
       const response = await request(app)
-        .get(`/api/dashboard?user_id=${testUserId.toString()}`)
+        .get('/api/dashboard')
+        .set('Authorization', `Bearer ${token}`)
         .expect(200);
 
       expect(response.body.data.completed_goals_count).toBe(0);
@@ -103,7 +111,8 @@ describe('Dashboard API', () => {
 
     it('should return 0 for best streak when no habits exist', async () => {
       const response = await request(app)
-        .get(`/api/dashboard?user_id=${testUserId.toString()}`)
+        .get('/api/dashboard')
+        .set('Authorization', `Bearer ${token}`)
         .expect(200);
 
       expect(response.body.data.best_streak).toBe(0);
@@ -137,7 +146,8 @@ describe('Dashboard API', () => {
       });
 
       const response = await request(app)
-        .get(`/api/dashboard?user_id=${testUserId.toString()}`)
+        .get('/api/dashboard')
+        .set('Authorization', `Bearer ${token}`)
         .expect(200);
 
       expect(response.body.data.habits_today).toHaveLength(2);
@@ -165,7 +175,8 @@ describe('Dashboard API', () => {
       });
 
       const response = await request(app)
-        .get(`/api/dashboard?user_id=${testUserId.toString()}`)
+        .get('/api/dashboard')
+        .set('Authorization', `Bearer ${token}`)
         .expect(200);
 
       expect(response.body.data.habits_today).toHaveLength(1);
@@ -191,7 +202,8 @@ describe('Dashboard API', () => {
       });
 
       const response = await request(app)
-        .get(`/api/dashboard?user_id=${testUserId.toString()}`)
+        .get('/api/dashboard')
+        .set('Authorization', `Bearer ${token}`)
         .expect(200);
 
       expect(response.body.data.habits_today).toHaveLength(1);
@@ -225,7 +237,8 @@ describe('Dashboard API', () => {
       await HabitLog.create({ habit_id: habit._id, date: today, is_completed: true });
 
       const response = await request(app)
-        .get(`/api/dashboard?user_id=${testUserId.toString()}`)
+        .get('/api/dashboard')
+        .set('Authorization', `Bearer ${token}`)
         .expect(200);
 
       expect(response.body.data.habits_today).toHaveLength(1);
@@ -238,13 +251,12 @@ describe('Dashboard API', () => {
       expect(habitData.weekly_completion_rate).toBe(43); // 3 out of 7 days
     });
 
-    it('should require user_id', async () => {
+    it('should require authentication token', async () => {
       const response = await request(app)
         .get('/api/dashboard')
-        .expect(400);
+        .expect(401);
 
-      expect(response.body.success).toBe(false);
-      expect(response.body.error).toContain('user_id');
+      expect(response.body.message).toContain('authorization denied');
     });
 
     it('should update streaks when fetching dashboard', async () => {
@@ -277,7 +289,8 @@ describe('Dashboard API', () => {
       });
 
       const response = await request(app)
-        .get(`/api/dashboard?user_id=${testUserId.toString()}`)
+        .get('/api/dashboard')
+        .set('Authorization', `Bearer ${token}`)
         .expect(200);
 
       // Verify streak was updated
