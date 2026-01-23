@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const { getDashboard } = require("../controllers/dashboardController");
+const authMiddleware = require('../middleware/authMiddleware');
+const { getDashboard } = require('../controllers/dashboardController');
 
 // Documentation Swagger
 
@@ -59,6 +60,6 @@ const { getDashboard } = require("../controllers/dashboardController");
  *         description: ID utilisateur manquant
  */
 // GET /api/dashboard - Get dashboard aggregated data
-router.get("/", getDashboard);
+router.get('/', authMiddleware, getDashboard);
 
 module.exports = router;

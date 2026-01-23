@@ -2,10 +2,18 @@
   <div class="nav-container">
     <h1 class="nav-title">{{ title }}</h1>
     <div class="nav-links">
-      <a routerLink="/dashboard" routerLinkActive="active">Dashboard</a>
-      <a routerLink="/goals" routerLinkActive="active">Goals</a>
-      <a routerLink="/habits" routerLinkActive="active">Habits</a>
-      <a routerLink="/stats" routerLinkActive="active">Statistics</a>
+      <ng-container *ngIf="isLoggedIn; else guestLinks">
+        <a routerLink="/dashboard" routerLinkActive="active">Dashboard</a>
+        <a routerLink="/goals" routerLinkActive="active">Goals</a>
+        <a routerLink="/habits" routerLinkActive="active">Habits</a>
+        <a routerLink="/stats" routerLinkActive="active">Statistics</a>
+        <a routerLink="/profile" routerLinkActive="active">Profile</a>
+        <a (click)="logout()" style="cursor: pointer;">Logout</a>
+      </ng-container>
+      <ng-template #guestLinks>
+        <a routerLink="/login" routerLinkActive="active">Login</a>
+        <a routerLink="/register" routerLinkActive="active">Register</a>
+      </ng-template>
     </div>
   </div>
 </nav>

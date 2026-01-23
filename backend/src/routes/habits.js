@@ -8,7 +8,13 @@ const {
   deleteHabit,
   logHabit,
   unlogHabit,
-} = require("../controllers/habitsController");
+} = require('../controllers/habitsController');
+const {
+  validateCreateHabit,
+  validateUpdateHabit,
+  validateLogHabit,
+  validateGetHabitsQuery,
+} = require('../validators/habitValidator');
 
 /**
  * @swagger
@@ -68,7 +74,7 @@ const {
  *         description: Habitude créée
  */
 // GET /api/habits - Get all habits (with optional query params: ?status=active&frequency=daily)
-router.get("/", getHabits);
+router.get('/', validateGetHabitsQuery, getHabits);
 
 /**
  * @swagger
@@ -122,10 +128,10 @@ router.get("/", getHabits);
 router.get("/:id", getHabitById);
 
 // POST /api/habits - Create a new habit
-router.post("/", createHabit);
+router.post('/', validateCreateHabit, createHabit);
 
 // PUT /api/habits/:id - Update a habit
-router.put("/:id", updateHabit);
+router.put('/:id', validateUpdateHabit, updateHabit);
 
 /**
  * @swagger
@@ -180,7 +186,7 @@ router.put("/:id", updateHabit);
  *         description: Log supprimé (habitude décochée)
  */
 // POST /api/habits/:id/log - Log a habit completion for a specific date
-router.post("/:id/log", logHabit);
+router.post('/:id/log', validateLogHabit, logHabit);
 
 // DELETE /api/habits/:id/log - Remove a habit log for a specific date
 router.delete("/:id/log", unlogHabit);

@@ -59,7 +59,8 @@ describe('Goals API', () => {
         .expect(400);
 
       expect(response.body.success).toBe(false);
-      expect(response.body.error).toContain('Due date must be after start date');
+      expect(response.body.details).toBeDefined();
+      expect(response.body.details.some(detail => detail.includes('Due date must be after start date'))).toBe(true);
     });
 
     it('should require title, startDate, and dueDate', async () => {
@@ -74,7 +75,8 @@ describe('Goals API', () => {
         .expect(400);
 
       expect(response.body.success).toBe(false);
-      expect(response.body.error).toContain('required');
+      expect(response.body.details).toBeDefined();
+      expect(response.body.details.some(detail => detail.toLowerCase().includes('required'))).toBe(true);
     });
   });
 
@@ -210,7 +212,8 @@ describe('Goals API', () => {
         .expect(400);
 
       expect(response.body.success).toBe(false);
-      expect(response.body.error).toContain('Status must be one of');
+      expect(response.body.details).toBeDefined();
+      expect(response.body.details.some(detail => detail.includes('Status must be one of'))).toBe(true);
     });
   });
 

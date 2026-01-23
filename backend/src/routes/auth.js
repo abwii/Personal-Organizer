@@ -1,8 +1,12 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
-const authController = require("../controllers/authController");
-const usersController = require("../controllers/usersController");
-const authMiddleware = require("../middlewares/jwt");
+const authController = require('../controllers/authController');
+const authMiddleware = require('../middleware/authMiddleware');
+const {
+  validateRegister,
+  validateLogin,
+  validateUpdateProfile,
+} = require('../validators/authValidator');
 
 // Routes d'authentification
 
