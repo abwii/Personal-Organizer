@@ -2,8 +2,6 @@ const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
 require("dotenv").config();
-const swaggerUi = require("swagger-ui-express");
-const swaggerSpecs = require("./config/swagger");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -13,8 +11,12 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Documentation Swagger
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
+// Documentation Swagger (chargement uniquement hors environnement de test)
+if (process.env.NODE_ENV !== "test") {
+  const swaggerUi = require("swagger-ui-express");
+  const swaggerSpecs = require("./config/swagger");
+  app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
+}
 
 // Health check endpoint
 app.get("/health", (req, res) => {
