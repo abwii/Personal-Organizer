@@ -7,18 +7,23 @@ const {
   updateGoal,
   deleteGoal,
 } = require('../controllers/goalsController');
+const {
+  validateCreateGoal,
+  validateUpdateGoal,
+  validateGetGoalsQuery,
+} = require('../validators/goalValidator');
 
 // GET /api/goals - Get all goals (with optional query params: ?status=active&priority=high)
-router.get('/', getGoals);
+router.get('/', validateGetGoalsQuery, getGoals);
 
 // GET /api/goals/:id - Get a single goal by ID
 router.get('/:id', getGoalById);
 
 // POST /api/goals - Create a new goal
-router.post('/', createGoal);
+router.post('/', validateCreateGoal, createGoal);
 
 // PUT /api/goals/:id - Update a goal
-router.put('/:id', updateGoal);
+router.put('/:id', validateUpdateGoal, updateGoal);
 
 // DELETE /api/goals/:id - Delete a goal
 router.delete('/:id', deleteGoal);
