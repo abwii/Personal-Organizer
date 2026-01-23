@@ -54,16 +54,24 @@ app.use((req, res) => {
 // Only start server if not in test environment and not already listening
 // Check if we're in a test environment or if the app is already listening
 if (process.env.NODE_ENV !== 'test' && !app.listening) {
-  // Initialize Mail Service and Cron Jobs
-  const mailService = require('./services/mail.service');
-  const cronJobs = require('./cron/cron.jobs');
+  const startServer = async () => {
+    try {
+      // Initialize Mail Service and Cron Jobs
+      const mailService = require('./services/mail.service');
+      const cronJobs = require('./cron/cron.jobs');
 
-  mailService.initMailService();
-  cronJobs.initCronJobs();
+      await mailService.initMailService();
+      cronJobs.initCronJobs();
 
-  app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-  });
+      app.listen(PORT, () => {
+        console.log(`Server is running on port ${PORT}`);
+      });
+    } catch (error) {
+      console.error('Failed to start server:', error);
+    }
+  };
+
+  startServer();
 }
 
 module.exports = app;
