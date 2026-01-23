@@ -81,6 +81,7 @@ app.use("/api/goals", require("./routes/goals"));
 app.use("/api/habits", require("./routes/habits"));
 app.use("/api/dashboard", require("./routes/dashboard"));
 app.use("/api/stats", require("./routes/stats"));
+app.use("/api/templates", require("./routes/templates"));
 
 // Error handling middleware
 app.use((err, req, res, _next) => {

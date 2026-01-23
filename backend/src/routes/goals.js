@@ -6,6 +6,7 @@ const {
   createGoal,
   updateGoal,
   deleteGoal,
+  duplicateGoal,
 } = require('../controllers/goalsController');
 const {
   validateCreateGoal,
@@ -147,6 +148,47 @@ router.put('/:id', validateUpdateGoal, updateGoal);
 
 // DELETE /api/goals/:id - Delete a goal
 router.delete("/:id", deleteGoal);
+
+/**
+ * @swagger
+ * /api/goals/{id}/duplicate:
+ *   post:
+ *     summary: Dupliquer un objectif avec ses étapes (Deep Copy)
+ *     tags: [Goals]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [user_id]
+ *             properties:
+ *               user_id:
+ *                 type: string
+ *                 example: "65a1b2c3d4e5f6g7h8i9j0k1"
+ *               title:
+ *                 type: string
+ *                 example: "Apprendre le piano (Copy)"
+ *               startDate:
+ *                 type: string
+ *                 format: date
+ *                 example: "2024-02-01"
+ *               dueDate:
+ *                 type: string
+ *                 format: date
+ *                 example: "2024-07-31"
+ *     responses:
+ *       201:
+ *         description: Objectif dupliqué avec succès (inclut les étapes)
+ *       404:
+ *         description: Objectif non trouvé
+ */
+// POST /api/goals/:id/duplicate - Duplicate a goal with its steps
+router.post("/:id/duplicate", duplicateGoal);
 
 // Step Routes
 const {

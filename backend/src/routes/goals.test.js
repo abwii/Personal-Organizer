@@ -2,6 +2,7 @@ const request = require('supertest');
 const mongoose = require('mongoose');
 const app = require('../index');
 const Goal = require('../models/Goal');
+const Step = require('../models/Step');
 
 describe('Goals API', () => {
   let testUserId;
@@ -18,6 +19,10 @@ describe('Goals API', () => {
 
   beforeEach(async () => {
     // Clean up before each test
+    const goalIds = await Goal.find({ user_id: testUserId }).distinct('_id');
+    if (goalIds.length > 0) {
+      await Step.deleteMany({ goal_id: { $in: goalIds } });
+    }
     await Goal.deleteMany({ user_id: testUserId });
   });
 
@@ -330,6 +335,89 @@ describe('Goals API', () => {
 
       goal = await Goal.findById(goalId);
       expect(goal.progress).toBe(0); // No steps left
+    });
+  });
+
+  describe('POST /api/goals/:id/duplicate', () => {
+    it('should duplicate a goal with its steps (Deep Copy)', async () => {
+      // Create a goal with steps
+      const goal = await Goal.create({
+        user_id: testUserId,
+        title: 'Original Goal',
+        description: 'Original description',
+        startDate: new Date('2024-01-01'),
+        dueDate: new Date('2024-06-30'),
+        priority: 'high',
+        category: 'Work',
+        status: 'active',
+      });
+
+      await Step.insertMany([
+        { goal_id: goal._id, title: 'Step 1', is_completed: true },
+        { goal_id: goal._id, title: 'Step 2', is_completed: false },
+        { goal_id: goal._id, title: 'Step 3', is_completed: false },
+      ]);
+
+      const today = new Date();
+      today.setUTCHours(0, 0, 0, 0);
+      const newDueDate = new Date(today);
+      newDueDate.setUTCDate(newDueDate.getUTCDate() + 180);
+
+      const response = await request(app)
+        .post(`/api/goals/${goal._id}/duplicate`)
+        .send({
+          user_id: testUserId.toString(),
+          startDate: today.toISOString().split('T')[0],
+          dueDate: newDueDate.toISOString().split('T')[0],
+        })
+        .expect(201);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.goal).toBeDefined();
+      expect(response.body.data.goal.title).toBe('Original Goal (Copy)');
+      expect(response.body.data.goal.status).toBe('active');
+      expect(response.body.data.goal.progress).toBe(0); // Progress should be reset
+      expect(response.body.data.steps).toBeDefined();
+      expect(response.body.data.steps.length).toBe(3);
+
+      // Verify all steps are not completed (reset)
+      const allStepsCompleted = response.body.data.steps.every(step => step.is_completed === false);
+      expect(allStepsCompleted).toBe(true);
+
+      // Verify steps have correct titles
+      const stepTitles = response.body.data.steps.map(s => s.title);
+      expect(stepTitles).toContain('Step 1');
+      expect(stepTitles).toContain('Step 2');
+      expect(stepTitles).toContain('Step 3');
+    });
+
+    it('should return 404 for non-existent goal', async () => {
+      const fakeId = new mongoose.Types.ObjectId();
+      const response = await request(app)
+        .post(`/api/goals/${fakeId}/duplicate`)
+        .send({
+          user_id: testUserId.toString(),
+        })
+        .expect(404);
+
+      expect(response.body.success).toBe(false);
+    });
+
+    it('should require user_id', async () => {
+      const goal = await Goal.create({
+        user_id: testUserId,
+        title: 'Test Goal',
+        startDate: new Date('2024-01-01'),
+        dueDate: new Date('2024-12-31'),
+      });
+
+      const response = await request(app)
+        .post(`/api/goals/${goal._id}/duplicate`)
+        .send({})
+        .expect(400);
+
+      expect(response.body.success).toBe(false);
+      expect(response.body.error).toContain('user_id');
     });
   });
 });

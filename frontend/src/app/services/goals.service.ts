@@ -63,4 +63,11 @@ export class GoalsService {
   deleteGoal(id: string, userId: string): Observable<{ success: boolean; message: string }> {
     return this.http.delete<{ success: boolean; message: string }>(`${this.apiUrl}/${id}?user_id=${userId}`);
   }
+
+  duplicateGoal(id: string, userId: string, options?: { title?: string; startDate?: string; dueDate?: string }): Observable<GoalResponse & { data: { goal: Goal; steps: any[] } }> {
+    return this.http.post<GoalResponse & { data: { goal: Goal; steps: any[] } }>(`${this.apiUrl}/${id}/duplicate`, {
+      user_id: userId,
+      ...options
+    });
+  }
 }
