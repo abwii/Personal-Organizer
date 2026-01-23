@@ -45,6 +45,13 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Documentation Swagger (chargement uniquement hors environnement de test)
+if (process.env.NODE_ENV !== "test") {
+  const swaggerUi = require("swagger-ui-express");
+  const swaggerSpecs = require("./config/swagger");
+  app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
+}
+
 // Health check endpoint
 app.get("/health", (req, res) => {
   res.status(200).json({ status: "OK", message: "Server is running" });
@@ -69,11 +76,11 @@ if (process.env.NODE_ENV !== "test") {
 }
 
 // Routes
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/goals', require('./routes/goals'));
-app.use('/api/habits', require('./routes/habits'));
-app.use('/api/dashboard', require('./routes/dashboard'));
-app.use('/api/stats', require('./routes/stats'));
+app.use("/api/auth", require("./routes/auth"));
+app.use("/api/goals", require("./routes/goals"));
+app.use("/api/habits", require("./routes/habits"));
+app.use("/api/dashboard", require("./routes/dashboard"));
+app.use("/api/stats", require("./routes/stats"));
 
 // Error handling middleware
 app.use((err, req, res, _next) => {
@@ -88,12 +95,12 @@ app.use((req, res) => {
 
 // Only start server if not in test environment and not already listening
 // Check if we're in a test environment or if the app is already listening
-if (process.env.NODE_ENV !== 'test' && !app.listening) {
+if (process.env.NODE_ENV !== "test" && !app.listening) {
   const startServer = async () => {
     try {
       // Initialize Mail Service and Cron Jobs
-      const mailService = require('./services/mail.service');
-      const cronJobs = require('./cron/cron.jobs');
+      const mailService = require("./services/mail.service");
+      const cronJobs = require("./cron/cron.jobs");
 
       await mailService.initMailService();
       cronJobs.initCronJobs();
@@ -102,7 +109,7 @@ if (process.env.NODE_ENV !== 'test' && !app.listening) {
         console.log(`Server is running on port ${PORT}`);
       });
     } catch (error) {
-      console.error('Failed to start server:', error);
+      console.error("Failed to start server:", error);
     }
   };
 

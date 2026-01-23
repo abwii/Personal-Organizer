@@ -1,6 +1,9 @@
-const Habit = require('../models/Habit');
-const HabitLog = require('../models/HabitLog');
-const { calculateStreak, calculateWeeklyCompletion } = require('../utils/habitUtils');
+const Habit = require("../models/Habit");
+const HabitLog = require("../models/HabitLog");
+const {
+  calculateStreak,
+  calculateWeeklyCompletion,
+} = require("../utils/habitUtils");
 
 // GET /api/habits - Get all habits with optional filtering
 const getHabits = async (req, res) => {
@@ -29,14 +32,17 @@ const getHabits = async (req, res) => {
         const logs = await HabitLog.find({ habit_id: habit._id });
         const currentStreak = calculateStreak(logs);
         const weeklyCompletion = calculateWeeklyCompletion(logs);
-        
-        if (habit.current_streak !== currentStreak || habit.weekly_completion_rate !== weeklyCompletion) {
+
+        if (
+          habit.current_streak !== currentStreak ||
+          habit.weekly_completion_rate !== weeklyCompletion
+        ) {
           habit.current_streak = currentStreak;
           habit.weekly_completion_rate = weeklyCompletion;
           await habit.save();
         }
         return habit;
-      })
+      }),
     );
 
     res.status(200).json({
@@ -45,10 +51,10 @@ const getHabits = async (req, res) => {
       data: habitsWithUpdatedStreaks,
     });
   } catch (error) {
-    console.error('Error fetching habits:', error);
+    console.error("Error fetching habits:", error);
     res.status(500).json({
       success: false,
-      error: 'Failed to fetch habits',
+      error: "Failed to fetch habits",
     });
   }
 };
@@ -64,7 +70,7 @@ const getHabitById = async (req, res) => {
     if (!habit) {
       return res.status(404).json({
         success: false,
-        error: 'Habit not found',
+        error: "Habit not found",
       });
     }
 
@@ -72,8 +78,11 @@ const getHabitById = async (req, res) => {
     const logs = await HabitLog.find({ habit_id: habit._id });
     const currentStreak = calculateStreak(logs);
     const weeklyCompletion = calculateWeeklyCompletion(logs);
-    
-    if (habit.current_streak !== currentStreak || habit.weekly_completion_rate !== weeklyCompletion) {
+
+    if (
+      habit.current_streak !== currentStreak ||
+      habit.weekly_completion_rate !== weeklyCompletion
+    ) {
       habit.current_streak = currentStreak;
       habit.weekly_completion_rate = weeklyCompletion;
       await habit.save();
@@ -84,16 +93,16 @@ const getHabitById = async (req, res) => {
       data: habit,
     });
   } catch (error) {
-    console.error('Error fetching habit:', error);
-    if (error.name === 'CastError') {
+    console.error("Error fetching habit:", error);
+    if (error.name === "CastError") {
       return res.status(400).json({
         success: false,
-        error: 'Invalid habit ID',
+        error: "Invalid habit ID",
       });
     }
     res.status(500).json({
       success: false,
-      error: 'Failed to fetch habit',
+      error: "Failed to fetch habit",
     });
   }
 };
@@ -104,9 +113,9 @@ const createHabit = async (req, res) => {
     const {
       title,
       description,
-      frequency = 'daily',
+      frequency = "daily",
       category,
-      status = 'active',
+      status = "active",
       user_id, // Temporary: will use auth middleware later
     } = req.body;
 
@@ -114,30 +123,30 @@ const createHabit = async (req, res) => {
     if (!title) {
       return res.status(400).json({
         success: false,
-        error: 'Title is required',
+        error: "Title is required",
       });
     }
 
     if (!user_id) {
       return res.status(400).json({
         success: false,
-        error: 'user_id is required',
+        error: "user_id is required",
       });
     }
 
     // Validate frequency
-    if (frequency && !['daily', 'weekly'].includes(frequency)) {
+    if (frequency && !["daily", "weekly"].includes(frequency)) {
       return res.status(400).json({
         success: false,
-        error: 'Frequency must be one of: daily, weekly',
+        error: "Frequency must be one of: daily, weekly",
       });
     }
 
     // Validate status
-    if (status && !['active', 'archived'].includes(status)) {
+    if (status && !["active", "archived"].includes(status)) {
       return res.status(400).json({
         success: false,
-        error: 'Status must be one of: active, archived',
+        error: "Status must be one of: active, archived",
       });
     }
 
@@ -157,8 +166,8 @@ const createHabit = async (req, res) => {
       data: habit,
     });
   } catch (error) {
-    console.error('Error creating habit:', error);
-    if (error.name === 'ValidationError') {
+    console.error("Error creating habit:", error);
+    if (error.name === "ValidationError") {
       return res.status(400).json({
         success: false,
         error: error.message,
@@ -166,7 +175,7 @@ const createHabit = async (req, res) => {
     }
     res.status(500).json({
       success: false,
-      error: 'Failed to create habit',
+      error: "Failed to create habit",
     });
   }
 };
@@ -191,7 +200,7 @@ const updateHabit = async (req, res) => {
     if (!habit) {
       return res.status(404).json({
         success: false,
-        error: 'Habit not found',
+        error: "Habit not found",
       });
     }
 
@@ -200,19 +209,19 @@ const updateHabit = async (req, res) => {
     if (description !== undefined) habit.description = description;
     if (category !== undefined) habit.category = category;
     if (frequency !== undefined) {
-      if (!['daily', 'weekly'].includes(frequency)) {
+      if (!["daily", "weekly"].includes(frequency)) {
         return res.status(400).json({
           success: false,
-          error: 'Frequency must be one of: daily, weekly',
+          error: "Frequency must be one of: daily, weekly",
         });
       }
       habit.frequency = frequency;
     }
     if (status !== undefined) {
-      if (!['active', 'archived'].includes(status)) {
+      if (!["active", "archived"].includes(status)) {
         return res.status(400).json({
           success: false,
-          error: 'Status must be one of: active, archived',
+          error: "Status must be one of: active, archived",
         });
       }
       habit.status = status;
@@ -225,14 +234,14 @@ const updateHabit = async (req, res) => {
       data: habit,
     });
   } catch (error) {
-    console.error('Error updating habit:', error);
-    if (error.name === 'CastError') {
+    console.error("Error updating habit:", error);
+    if (error.name === "CastError") {
       return res.status(400).json({
         success: false,
-        error: 'Invalid habit ID',
+        error: "Invalid habit ID",
       });
     }
-    if (error.name === 'ValidationError') {
+    if (error.name === "ValidationError") {
       return res.status(400).json({
         success: false,
         error: error.message,
@@ -240,7 +249,7 @@ const updateHabit = async (req, res) => {
     }
     res.status(500).json({
       success: false,
-      error: 'Failed to update habit',
+      error: "Failed to update habit",
     });
   }
 };
@@ -256,7 +265,7 @@ const deleteHabit = async (req, res) => {
     if (!habit) {
       return res.status(404).json({
         success: false,
-        error: 'Habit not found',
+        error: "Habit not found",
       });
     }
 
@@ -265,20 +274,20 @@ const deleteHabit = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: 'Habit deleted successfully',
+      message: "Habit deleted successfully",
       data: habit,
     });
   } catch (error) {
-    console.error('Error deleting habit:', error);
-    if (error.name === 'CastError') {
+    console.error("Error deleting habit:", error);
+    if (error.name === "CastError") {
       return res.status(400).json({
         success: false,
-        error: 'Invalid habit ID',
+        error: "Invalid habit ID",
       });
     }
     res.status(500).json({
       success: false,
-      error: 'Failed to delete habit',
+      error: "Failed to delete habit",
     });
   }
 };
@@ -297,28 +306,40 @@ const logHabit = async (req, res) => {
     if (!habit) {
       return res.status(404).json({
         success: false,
-        error: 'Habit not found',
+        error: "Habit not found",
       });
     }
 
     // Parse date and normalize to UTC midnight to prevent double counting
     let logDate;
     if (date) {
-      logDate = new Date(date);
+      // Handle plain YYYY-MM-DD as UTC date to avoid timezone parsing differences
+      const dateOnlyMatch = String(date).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      if (dateOnlyMatch) {
+        const year = parseInt(dateOnlyMatch[1], 10);
+        const month = parseInt(dateOnlyMatch[2], 10) - 1;
+        const day = parseInt(dateOnlyMatch[3], 10);
+        logDate = new Date(Date.UTC(year, month, day));
+      } else {
+        logDate = new Date(date);
+      }
+
       if (Number.isNaN(logDate.getTime())) {
         return res.status(400).json({
           success: false,
-          error: 'Invalid date format',
+          error: "Invalid date format",
         });
       }
     } else {
       // Default to today at midnight UTC
-      logDate = new Date();
+      const now = new Date();
+      logDate = new Date(
+        Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
+      );
     }
 
-    // Normalize to midnight UTC to ensure one completion per day
+    // Ensure normalized to midnight UTC
     logDate.setUTCHours(0, 0, 0, 0);
-    logDate.setUTCMilliseconds(0);
 
     // Check if log already exists for this date (prevent double counting)
     // Use range query to handle any date storage differences
@@ -326,7 +347,7 @@ const logHabit = async (req, res) => {
     tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
     tomorrow.setUTCHours(0, 0, 0, 0);
     tomorrow.setUTCMilliseconds(0);
-    
+
     const existingLog = await HabitLog.findOne({
       habit_id: id,
       date: {
@@ -338,7 +359,7 @@ const logHabit = async (req, res) => {
     if (existingLog) {
       return res.status(400).json({
         success: false,
-        error: 'Habit already logged for this date',
+        error: "Habit already logged for this date",
       });
     }
 
@@ -355,10 +376,10 @@ const logHabit = async (req, res) => {
       await habitLog.save();
     } catch (error) {
       // Handle duplicate key error from unique index
-      if (error.code === 11000 || error.name === 'MongoServerError') {
+      if (error.code === 11000 || error.name === "MongoServerError") {
         return res.status(400).json({
           success: false,
-          error: 'Habit already logged for this date',
+          error: "Habit already logged for this date",
         });
       }
       throw error;
@@ -387,23 +408,23 @@ const logHabit = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Error logging habit:', error);
-    if (error.name === 'CastError') {
+    console.error("Error logging habit:", error);
+    if (error.name === "CastError") {
       return res.status(400).json({
         success: false,
-        error: 'Invalid habit ID',
+        error: "Invalid habit ID",
       });
     }
     if (error.code === 11000) {
       // Duplicate key error (unique index violation)
       return res.status(400).json({
         success: false,
-        error: 'Habit already logged for this date',
+        error: "Habit already logged for this date",
       });
     }
     res.status(500).json({
       success: false,
-      error: 'Failed to log habit',
+      error: "Failed to log habit",
     });
   }
 };
@@ -424,7 +445,7 @@ const unlogHabit = async (req, res) => {
     if (!habit) {
       return res.status(404).json({
         success: false,
-        error: 'Habit not found',
+        error: "Habit not found",
       });
     }
 
@@ -435,7 +456,7 @@ const unlogHabit = async (req, res) => {
       if (Number.isNaN(logDate.getTime())) {
         return res.status(400).json({
           success: false,
-          error: 'Invalid date format',
+          error: "Invalid date format",
         });
       }
     } else {
@@ -464,7 +485,7 @@ const unlogHabit = async (req, res) => {
     if (!deletedLog) {
       return res.status(404).json({
         success: false,
-        error: 'Habit log not found for this date',
+        error: "Habit log not found for this date",
       });
     }
 
@@ -488,16 +509,16 @@ const unlogHabit = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Error unlogging habit:', error);
-    if (error.name === 'CastError') {
+    console.error("Error unlogging habit:", error);
+    if (error.name === "CastError") {
       return res.status(400).json({
         success: false,
-        error: 'Invalid habit ID',
+        error: "Invalid habit ID",
       });
     }
     res.status(500).json({
       success: false,
-      error: 'Failed to unlog habit',
+      error: "Failed to unlog habit",
     });
   }
 };
