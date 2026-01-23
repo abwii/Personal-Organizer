@@ -13,6 +13,7 @@ import { HabitFormComponent } from './components/habits/habit-form.component';
 import { LoginComponent } from './components/login/login.component';
 import { RegisterComponent } from './components/register/register.component';
 import { ProfileComponent } from './components/profile/profile.component';
+import { StatsComponent } from './components/stats/stats.component';
 
 import { HTTP_INTERCEPTORS } from '@angular/common/http';
 import { AuthInterceptor } from './auth.interceptor';
@@ -27,7 +28,8 @@ import { AuthInterceptor } from './auth.interceptor';
     HabitFormComponent,
     LoginComponent,
     RegisterComponent,
-    ProfileComponent
+    ProfileComponent,
+    StatsComponent
   ],
   imports: [
     BrowserModule, // BrowserModule includes CommonModule

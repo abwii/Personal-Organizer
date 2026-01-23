@@ -39,6 +39,7 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/goals', require('./routes/goals'));
 app.use('/api/habits', require('./routes/habits'));
 app.use('/api/dashboard', require('./routes/dashboard'));
+app.use('/api/stats', require('./routes/stats'));
 
 // Error handling middleware
 app.use((err, req, res, _next) => {
@@ -54,9 +55,24 @@ app.use((req, res) => {
 // Only start server if not in test environment and not already listening
 // Check if we're in a test environment or if the app is already listening
 if (process.env.NODE_ENV !== 'test' && !app.listening) {
-  app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-  });
+  const startServer = async () => {
+    try {
+      // Initialize Mail Service and Cron Jobs
+      const mailService = require('./services/mail.service');
+      const cronJobs = require('./cron/cron.jobs');
+
+      await mailService.initMailService();
+      cronJobs.initCronJobs();
+
+      app.listen(PORT, () => {
+        console.log(`Server is running on port ${PORT}`);
+      });
+    } catch (error) {
+      console.error('Failed to start server:', error);
+    }
+  };
+
+  startServer();
 }
 
 module.exports = app;

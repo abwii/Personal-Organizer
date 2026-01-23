@@ -251,13 +251,12 @@ describe('Dashboard API', () => {
       expect(habitData.weekly_completion_rate).toBe(43); // 3 out of 7 days
     });
 
-    it('should require user_id', async () => {
+    it('should require authentication token', async () => {
       const response = await request(app)
         .get('/api/dashboard')
-        .expect(400);
+        .expect(401);
 
-      expect(response.body.success).toBe(false);
-      expect(response.body.error).toContain('user_id');
+      expect(response.body.message).toContain('authorization denied');
     });
 
     it('should update streaks when fetching dashboard', async () => {

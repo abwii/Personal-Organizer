@@ -43,3 +43,4 @@ coverage/
 *.pem
 .cache/
 *.pack
+frontend/.angular/cache

@@ -59,11 +59,6 @@
       </div>
 
       <div *ngIf="goal.category" class="goal-category">{{ goal.category }}</div>
-
-      <div *ngIf="goal.progress !== undefined" class="progress-bar">
-        <div class="progress-fill" [style.width.%]="goal.progress"></div>
-        <span class="progress-text">{{ goal.progress }}%</span>
-      </div>
     </div>
   </div>
 
