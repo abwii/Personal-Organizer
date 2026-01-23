@@ -8,16 +8,17 @@ describe('habitUtils - calculateStreak', () => {
 
   beforeAll(() => {
     today = new Date();
-    today.setHours(0, 0, 0, 0);
+    today.setUTCHours(0, 0, 0, 0);
+    today.setUTCMilliseconds(0);
 
     yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
+    yesterday.setUTCDate(yesterday.getUTCDate() - 1);
 
     twoDaysAgo = new Date(today);
-    twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+    twoDaysAgo.setUTCDate(twoDaysAgo.getUTCDate() - 2);
 
     threeDaysAgo = new Date(today);
-    threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+    threeDaysAgo.setUTCDate(threeDaysAgo.getUTCDate() - 3);
   });
 
   it('should return 0 for empty logs', () => {
@@ -106,12 +107,13 @@ describe('habitUtils - calculateWeeklyCompletion', () => {
 
   beforeAll(() => {
     today = new Date();
-    today.setHours(0, 0, 0, 0);
+    today.setUTCHours(0, 0, 0, 0);
+    today.setUTCMilliseconds(0);
 
     dates = [];
     for (let i = 0; i < 10; i++) {
       const d = new Date(today);
-      d.setDate(d.getDate() - i);
+      d.setUTCDate(d.getUTCDate() - i);
       dates.push(d);
     }
   });

@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/authController');
+const usersController = require('../controllers/usersController');
 const authMiddleware = require('../middleware/authMiddleware');
 const {
   validateRegister,
@@ -138,7 +139,7 @@ router.post("/logout", authController.logout);
  *       200:
  *         description: Profil mis à jour
  */
-router.get("/me", authMiddleware.verifyUser, usersController.getUserInfos);
-router.put("/me", authMiddleware.verifyUser, usersController.updateUserInfos);
+router.get("/me", authMiddleware, usersController.getUserInfos);
+router.put("/me", authMiddleware, usersController.updateUserInfos);
 
 module.exports = router;

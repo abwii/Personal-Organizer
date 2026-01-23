@@ -126,3 +126,10 @@ exports.updateProfile = async (req, res) => {
     res.status(500).send('Server Error');
   }
 };
+
+// @route   POST /api/auth/logout
+// @desc    Logout user
+// @access  Public
+exports.logout = (req, res) => {
+  res.status(200).json({ message: 'Déconnexion réussie' });
+};
