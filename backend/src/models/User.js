@@ -14,6 +14,17 @@ const UserSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  xp: {
+    type: Number,
+    default: 0,
+  },
+  level: {
+    type: Number,
+    default: 1,
+  },
+  badges: [{
+    type: String, // Storing badge names or IDs
+  }],
 });
 
 module.exports = mongoose.model("User", UserSchema);
