@@ -164,8 +164,15 @@ const createGoalFromTemplate = async (req, res) => {
         .map((templateStep, index) => {
           // Calculate step due date based on goal dates and step order
           const stepDueDate = new Date(start);
-          const daysPerStep = Math.floor((due - start) / template.steps.length);
-          stepDueDate.setUTCDate(stepDueDate.getUTCDate() + (daysPerStep * (index + 1)));
+          const totalDays = Math.max(1, Math.floor((due.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
+          const daysPerStep = Math.max(1, Math.floor(totalDays / template.steps.length));
+          const daysOffset = daysPerStep * (index + 1);
+          stepDueDate.setUTCDate(stepDueDate.getUTCDate() + daysOffset);
+          
+          // Ensure step due date doesn't exceed goal due date
+          if (stepDueDate > due) {
+            stepDueDate.setTime(due.getTime());
+          }
 
           return {
             goal_id: goal._id,
