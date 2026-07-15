@@ -398,6 +398,25 @@ const logHabit = async (req, res) => {
     }
     await habit.save();
 
+    // Gamification: Add XP and check badges
+    const gamificationService = require('../services/gamification.service');
+    let gamificationUpdates = {};
+    try {
+      const xpResult = await gamificationService.addXp(userId, gamificationService.XP_HABIT_COMPLETION);
+      const newBadges = await gamificationService.checkBadges(userId, 'habit_log', { current_streak: newStreak });
+      
+      gamificationUpdates = {
+        xp_gained: gamificationService.XP_HABIT_COMPLETION,
+        new_xp: xpResult.xp,
+        new_level: xpResult.level,
+        leveled_up: xpResult.leveledUp,
+        new_badges: newBadges
+      };
+    } catch (err) {
+      console.error('Gamification error:', err);
+      // Don't fail the request if gamification fails
+    }
+
     res.status(201).json({
       success: true,
       data: {
@@ -405,6 +424,7 @@ const logHabit = async (req, res) => {
         current_streak: habit.current_streak,
         best_streak: habit.best_streak,
         weekly_completion_rate: habit.weekly_completion_rate,
+        gamification: gamificationUpdates
       },
     });
   } catch (error) {

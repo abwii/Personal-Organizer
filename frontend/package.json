@@ -2,6 +2,9 @@
   "name": "personal-organizer-frontend",
   "version": "1.0.0",
   "description": "Frontend Angular application for Personal Organizer",
+  "keywords": ["personal-organizer", "angular", "goals", "habits", "frontend"],
+  "author": "Wassim Bacha, Jimmy Lette Voueto, Christian Miclea",
+  "license": "MIT",
   "scripts": {
     "ng": "ng",
     "start": "ng serve --host 0.0.0.0 --port 4200",

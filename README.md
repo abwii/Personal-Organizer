@@ -1,3 +1,13 @@
+# Personal Organizer
+
+A full-stack goal and habit tracking application built with **Node.js / Express**, **Angular**, and **MongoDB**. Supports gamification (XP, levels, badges), streak tracking, email notifications, and a statistics dashboard.
+
+![CI](https://github.com/abwii/Personal-Organizer/actions/workflows/main.yml/badge.svg)
+![Node](https://img.shields.io/badge/Node.js-18%2B-339933?logo=node.js)
+![License](https://img.shields.io/badge/license-MIT-blue)
+
+## Contributors
+
 - [Wassim Bacha](https://github.com/abwii)
 - [Jimmy LETTE VOUETO](https://github.com/jlette)
 - [Christian MICLEA](https://github.com/MicleaChristian)
@@ -206,8 +216,8 @@ npm run lint:fix # Corrige automatiquement les erreurs de lint
 
 **Accès MongoDB :**
 ```bash
-# Via Docker
-docker exec -it personal-organizer-mongodb mongosh -u admin -p password
+# Via Docker (remplacez <YOUR_MONGO_PASSWORD> par la valeur de MONGO_INITDB_ROOT_PASSWORD dans .env)
+docker exec -it personal-organizer-mongodb mongosh -u admin -p <YOUR_MONGO_PASSWORD>
 
 # Une fois connecté :
 use personal-organizer
@@ -255,41 +265,50 @@ npm test
 
 ```
 Personal-Organizer/
-├── backend/                    # API Node.js + Express.js
-│   ├── src/
-│   │   ├── controllers/        # Contrôleurs (logique métier)
-│   │   │   ├── goalsController.js
-│   │   │   └── habitsController.js
-│   │   ├── models/             # Modèles Mongoose
-│   │   │   ├── Goal.js
-│   │   │   ├── Habit.js
-│   │   │   └── HabitLog.js
-│   │   ├── routes/             # Routes Express
-│   │   │   ├── goals.js
-│   │   │   ├── goals.test.js
-│   │   │   ├── habits.js
-│   │   │   └── habits.test.js
-│   │   ├── index.js            # Point d'entrée de l'application
-│   │   └── index.test.js       # Tests de base
-│   ├── .eslintrc.js            # Configuration ESLint
-│   ├── jest.config.js          # Configuration Jest
-│   ├── jest.setup.js           # Setup Jest (connexion MongoDB)
-│   ├── Dockerfile              # Image production
-│   ├── Dockerfile.dev          # Image développement
-│   └── package.json
-├── frontend/                   # Application Angular (placeholder)
-│   ├── Dockerfile
-│   ├── Dockerfile.dev
-│   └── package.json
-├── docs/                       # Documentation
-│   └── mld.pdf                 # Modèle de données
-├── docker-compose.yml          # Configuration développement
-├── docker-compose.prod.yml     # Configuration production
-├── .env.example                # Template variables d'environnement
-├── .github/
-│   └── workflows/
-│       └── main.yml            # Pipeline CI/CD GitHub Actions
-└── README.md                   # Ce fichier
+├── backend/                       # API Node.js + Express.js
+│   └── src/
+│       ├── controllers/           # Logique métier
+│       │   ├── goalsController.js
+│       │   ├── habitsController.js
+│       │   ├── stepsController.js
+│       │   ├── statsController.js
+│       │   ├── usersController.js
+│       │   └── gamificationController.js
+│       ├── models/                # Modèles Mongoose
+│       │   ├── Goal.js
+│       │   ├── Habit.js
+│       │   ├── HabitLog.js
+│       │   ├── Step.js
+│       │   └── User.js
+│       ├── routes/                # Routes Express + tests
+│       │   ├── goals.js / goals.test.js
+│       │   ├── habits.js / habits.test.js
+│       │   ├── steps.js / steps.test.js
+│       │   ├── stats.js
+│       │   └── users.js
+│       ├── middleware/            # Auth JWT, validation
+│       ├── validators/            # Schémas Joi
+│       ├── services/              # Services métier
+│       ├── cron/                  # Jobs planifiés (rappels email)
+│       ├── templates/             # Templates email HTML
+│       ├── scripts/               # Scripts utilitaires (seed)
+│       └── utils/                 # Helpers
+├── frontend/                      # Application Angular
+│   └── src/
+│       ├── app/
+│       │   ├── components/        # Composants UI
+│       │   └── services/          # Services Angular
+│       └── assets/
+├── docs/                          # Documentation technique
+│   ├── api-documentation.md       # Guide des endpoints REST
+│   ├── algorithmes.md             # Détails des algorithmes
+│   ├── EMAIL_NOTIFICATIONS.md     # Système de notifications
+│   └── mld.pdf                    # Modèle logique de données
+├── .github/workflows/main.yml     # Pipeline CI/CD GitHub Actions
+├── docker-compose.yml             # Stack développement
+├── docker-compose.prod.yml        # Stack production
+├── .env.example                   # Template variables d'environnement
+└── README.md
 ```
 
 ### Fonctionnalités implémentées
@@ -446,7 +465,8 @@ npm run test:watch
 
 **Via Docker :**
 ```bash
-docker exec -it personal-organizer-mongodb mongosh -u admin -p password
+# Remplacez <YOUR_MONGO_PASSWORD> par la valeur de MONGO_INITDB_ROOT_PASSWORD dans votre .env
+docker exec -it personal-organizer-mongodb mongosh -u admin -p <YOUR_MONGO_PASSWORD>
 ```
 
 **Commandes MongoDB utiles :**
@@ -481,7 +501,8 @@ db.habitlogs.deleteMany({})
 
 **Connexion depuis l'extérieur de Docker :**
 ```bash
-mongosh "mongodb://admin:password@localhost:27017/personal-organizer?authSource=admin"
+# Remplacez <YOUR_MONGO_PASSWORD> par la valeur de MONGO_INITDB_ROOT_PASSWORD dans votre .env
+mongosh "mongodb://admin:<YOUR_MONGO_PASSWORD>@localhost:27017/personal-organizer?authSource=admin"
 ```
 
 ### Variables d'environnement
@@ -492,19 +513,45 @@ Le fichier `.env.example` contient toutes les variables nécessaires :
 # Database Configuration
 MONGODB_PORT=27017
 MONGO_INITDB_ROOT_USERNAME=admin
-MONGO_INITDB_ROOT_PASSWORD=password
+MONGO_INITDB_ROOT_PASSWORD=<YOUR_SECURE_PASSWORD>
 MONGO_INITDB_DATABASE=personal-organizer
 
 # Backend Configuration
 BACKEND_PORT=3000
 NODE_ENV=development
-JWT_SECRET=your-secret-key-change-in-production
+JWT_SECRET=<YOUR_JWT_SECRET_MIN_32_CHARS>
 
 # Frontend Configuration
 FRONTEND_PORT=4200
 
-# MongoDB Connection String (for backend)
-# MONGODB_URI=mongodb://admin:password@localhost:27017/personal-organizer?authSource=admin
+# MongoDB Connection String (for local dev without Docker)
+# MONGODB_URI=mongodb://admin:<YOUR_SECURE_PASSWORD>@localhost:27017/personal-organizer?authSource=admin
 ```
 
 **Note :** En mode Docker Compose, `MONGODB_URI` est automatiquement construite. Pour développement local, décommentez et ajustez la ligne `MONGODB_URI`.
+
+---
+
+## Architecture
+
+Le backend suit une architecture en couches classique :
+
+- **Routes** — définissent les endpoints et délèguent aux contrôleurs
+- **Controllers** — orchestrent la logique métier et appellent les services
+- **Services** — encapsulent les opérations réutilisables (calcul de streaks, gamification, envoi d'emails)
+- **Models** — définissent les schémas Mongoose et les validations
+- **Middleware** — authentification JWT, gestion centralisée des erreurs
+- **Validators** — schémas Joi pour la validation des entrées
+- **Cron** — jobs planifiés pour les rappels par email (node-cron)
+
+Cette séparation des responsabilités permet de tester chaque couche indépendamment et de maintenir le code à grande échelle.
+
+### Choix techniques clés
+
+| Décision | Raison |
+|----------|--------|
+| MongoDB | Flexibilité du schéma pour les habitudes et objectifs aux structures variables |
+| JWT stateless | Scalabilité horizontale sans état côté serveur |
+| Docker multi-stage | Images de production légères, séparation claire dev/prod |
+| Jest + Supertest | Tests d'intégration réalistes des routes Express avec MongoDB en mémoire |
+| node-cron | Rappels email planifiés sans dépendance externe (Redis, etc.) |

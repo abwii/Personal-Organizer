@@ -39,8 +39,13 @@ coverage/
 # Angular
 .angular/
 
+# Shell scripts (dev-time utilities, not for public exposure)
+*.sh
+
 # Misc
 *.pem
 .cache/
 *.pack
 frontend/.angular/cache
+frontend/node_modules/
+backend/node_modules/

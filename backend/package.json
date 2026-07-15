@@ -12,9 +12,9 @@
     "lint:fix": "eslint src/**/*.js --fix",
     "seed:templates": "node src/scripts/seedTemplates.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": ["personal-organizer", "goals", "habits", "node", "express", "mongodb"],
+  "author": "Wassim Bacha, Jimmy Lette Voueto, Christian Miclea",
+  "license": "MIT",
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
