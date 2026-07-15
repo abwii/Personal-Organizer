@@ -187,6 +187,8 @@ const updateGoal = async (req, res) => {
       status,
     } = req.body;
 
+    const oldStatus = goal.status;
+
     // Update fields if provided
     if (title !== undefined) goal.title = title;
     if (description !== undefined) goal.description = description;
@@ -222,9 +224,30 @@ const updateGoal = async (req, res) => {
 
     await goal.save();
 
+    // Gamification: Add XP and check badges if goal completed
+    let gamificationUpdates = {};
+    if (oldStatus !== 'completed' && goal.status === 'completed') {
+      const gamificationService = require('../services/gamification.service');
+      try {
+        const xpResult = await gamificationService.addXp(userId, gamificationService.XP_GOAL_COMPLETION);
+        const newBadges = await gamificationService.checkBadges(userId, 'goal_complete', {});
+        
+        gamificationUpdates = {
+          xp_gained: gamificationService.XP_GOAL_COMPLETION,
+          new_xp: xpResult.xp,
+          new_level: xpResult.level,
+          leveled_up: xpResult.leveledUp,
+          new_badges: newBadges
+        };
+      } catch (err) {
+        console.error('Gamification error:', err);
+      }
+    }
+
     res.status(200).json({
       success: true,
       data: goal,
+      gamification: Object.keys(gamificationUpdates).length > 0 ? gamificationUpdates : undefined
     });
   } catch (error) {
     console.error('Error updating goal:', error);
